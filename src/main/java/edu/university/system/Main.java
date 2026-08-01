@@ -7,6 +7,7 @@ import edu.university.system.controller.ControllerFactory;
 import edu.university.system.controller.LoginController;
 import edu.university.system.model.UserSession;
 import edu.university.system.dao.DaoFactory;
+import edu.university.system.view.AppTheme;
 import edu.university.system.view.LoginView;
 import edu.university.system.view.MainWindow;
 import edu.university.system.view.PasswordChangeDialog;
@@ -15,7 +16,6 @@ import edu.university.system.view.SplashScreenView;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import javax.swing.UIManager;
 
 /**
  * Punto de entrada de la aplicacion Swing. Inicializa FlatLaf, carga la
@@ -79,9 +79,7 @@ public final class Main {
 
     private static void configureLookAndFeel() {
         FlatLightLaf.setup();
-        UIManager.put("Component.arc", 6);
-        UIManager.put("Button.arc", 6);
-        UIManager.put("TextComponent.arc", 6);
+        AppTheme.install();
     }
 
     private static void showStartupError(RuntimeException exception) {

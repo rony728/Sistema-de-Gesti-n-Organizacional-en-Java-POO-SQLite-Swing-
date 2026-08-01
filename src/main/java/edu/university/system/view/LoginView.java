@@ -57,11 +57,14 @@ public final class LoginView extends JDialog {
     private JPanel createContent(AppConfig appConfig) {
         JPanel rootPanel = new JPanel(new BorderLayout(16, 16));
         rootPanel.setBorder(BorderFactory.createEmptyBorder(24, 28, 22, 28));
+        rootPanel.setBackground(AppTheme.BLUE_PALE);
 
         JLabel titleLabel = new JLabel(appConfig.getApplicationName());
         titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 22f));
+        titleLabel.setForeground(AppTheme.NAVY);
 
         JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setOpaque(false);
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.insets = new Insets(7, 0, 7, 0);
         constraints.anchor = GridBagConstraints.WEST;
@@ -81,8 +84,13 @@ public final class LoginView extends JDialog {
         formPanel.add(passwordField, constraints);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        buttonPanel.setOpaque(false);
         JButton cancelButton = new JButton("Cancelar");
         JButton loginButton = new JButton("Ingresar");
+        loginButton.setBackground(AppTheme.BLUE);
+        loginButton.setForeground(AppTheme.WHITE);
+        cancelButton.setBackground(AppTheme.WHITE);
+        cancelButton.setForeground(AppTheme.NAVY);
 
         cancelButton.addActionListener(event -> dispose());
         loginButton.addActionListener(event -> authenticate());

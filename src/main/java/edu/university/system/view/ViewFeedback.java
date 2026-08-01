@@ -29,6 +29,11 @@ final class ViewFeedback {
         table.setAutoCreateRowSorter(true);
         table.getTableHeader().setReorderingAllowed(false);
         table.setFillsViewportHeight(true);
+        table.setGridColor(AppTheme.BORDER);
+        table.setSelectionBackground(AppTheme.BLUE);
+        table.setSelectionForeground(AppTheme.WHITE);
+        table.getTableHeader().setBackground(AppTheme.NAVY);
+        table.getTableHeader().setForeground(AppTheme.WHITE);
     }
 
     static void addInstantSearch(JTextField searchField, Runnable searchAction) {

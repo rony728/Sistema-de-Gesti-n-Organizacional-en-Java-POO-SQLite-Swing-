@@ -2,64 +2,185 @@ package edu.university.system.view;
 
 import edu.university.system.config.AppConfig;
 
-import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
-import javax.swing.JWindow;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
+import javax.swing.JWindow;
 import javax.swing.SwingConstants;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.net.URL;
 
+/**
+ * Pantalla de presentación mostrada durante el inicio del sistema.
+ *
+ * La imagen se carga desde los recursos internos del proyecto Maven para
+ * asegurar que funcione desde NetBeans, Maven y el archivo JAR ejecutable.
+ */
 public final class SplashScreenView extends JWindow {
 
-    private static final int WIDTH = 460;
-    private static final int HEIGHT = 260;
+    private static final int WIDTH = 724;
+    private static final int HEIGHT = 543;
 
+    private static final String SPLASH_IMAGE_PATH =
+            "/images/splash_inicio.png";
+
+    /**
+     * Construye y centra la pantalla de inicio.
+     *
+     * @param appConfig configuración general de la aplicación
+     */
     public SplashScreenView(AppConfig appConfig) {
         setSize(WIDTH, HEIGHT);
         setLocationRelativeTo(null);
+        setAlwaysOnTop(true);
         setContentPane(createContent(appConfig));
     }
 
+    /**
+     * Crea el contenido principal de la pantalla de inicio.
+     *
+     * @param appConfig configuración general de la aplicación
+     * @return componente que contiene la imagen de presentación
+     */
     private JComponent createContent(AppConfig appConfig) {
-        JPanel rootPanel = new JPanel(new BorderLayout(12, 12));
-        rootPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(38, 85, 115)),
-                BorderFactory.createEmptyBorder(28, 34, 28, 34)
-        ));
-        rootPanel.setBackground(new Color(247, 249, 250));
+        URL imageUrl = SplashScreenView.class.getResource(
+                SPLASH_IMAGE_PATH
+        );
 
-        JLabel titleLabel = new JLabel(appConfig.getApplicationName(), SwingConstants.CENTER);
-        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 28f));
-        titleLabel.setForeground(new Color(23, 45, 58));
+        if (imageUrl == null) {
+            System.err.println(
+                    "No se encontró la imagen de inicio: "
+                    + SPLASH_IMAGE_PATH
+            );
 
-        JLabel subtitleLabel = new JLabel(appConfig.getCompanyName(), SwingConstants.CENTER);
-        subtitleLabel.setFont(subtitleLabel.getFont().deriveFont(Font.PLAIN, 15f));
-        subtitleLabel.setForeground(new Color(77, 92, 103));
+            return createFallbackContent(appConfig);
+        }
 
-        JPanel centerPanel = new JPanel(new BorderLayout(8, 8));
-        centerPanel.setOpaque(false);
-        centerPanel.add(titleLabel, BorderLayout.CENTER);
-        centerPanel.add(subtitleLabel, BorderLayout.SOUTH);
+        Image splashImage = new ImageIcon(imageUrl).getImage();
 
-        JProgressBar progressBar = new JProgressBar();
-        progressBar.setIndeterminate(true);
-        progressBar.setPreferredSize(new Dimension(WIDTH - 90, 12));
+        SplashImagePanel imagePanel = new SplashImagePanel(
+                splashImage
+        );
 
-        JLabel versionLabel = new JLabel("Version " + appConfig.getApplicationVersion(), SwingConstants.RIGHT);
-        versionLabel.setForeground(new Color(77, 92, 103));
+        imagePanel.setPreferredSize(
+                new Dimension(WIDTH, HEIGHT)
+        );
 
-        JPanel bottomPanel = new JPanel(new BorderLayout(8, 8));
-        bottomPanel.setOpaque(false);
-        bottomPanel.add(progressBar, BorderLayout.CENTER);
-        bottomPanel.add(versionLabel, BorderLayout.SOUTH);
+        return imagePanel;
+    }
 
-        rootPanel.add(centerPanel, BorderLayout.CENTER);
-        rootPanel.add(bottomPanel, BorderLayout.SOUTH);
-        return rootPanel;
+    /**
+     * Crea una presentación sencilla en caso de que la imagen no exista.
+     *
+     * Esto evita que la aplicación falle por un recurso ausente.
+     *
+     * @param appConfig configuración general de la aplicación
+     * @return componente alternativo
+     */
+    private JComponent createFallbackContent(
+            AppConfig appConfig
+    ) {
+        JPanel fallbackPanel = new JPanel(
+                new BorderLayout()
+        );
+
+        fallbackPanel.setBackground(
+                AppTheme.BLUE_PALE
+        );
+
+        JLabel messageLabel = new JLabel(
+                "<html><div style='text-align:center;'>"
+                + "<h1>"
+                + appConfig.getApplicationName()
+                + "</h1>"
+                + "<p>Sistema de Gestión Organizacional</p>"
+                + "<p>POO + SQLite + Swing</p>"
+                + "<p>Versión "
+                + appConfig.getApplicationVersion()
+                + "</p>"
+                + "</div></html>",
+                SwingConstants.CENTER
+        );
+
+        messageLabel.setForeground(
+                AppTheme.NAVY
+        );
+
+        fallbackPanel.add(
+                messageLabel,
+                BorderLayout.CENTER
+        );
+
+        return fallbackPanel;
+    }
+
+    /**
+     * Panel encargado de dibujar la imagen adaptada al tamaño del splash.
+     */
+    private static final class SplashImagePanel
+            extends JPanel {
+
+        private final Image splashImage;
+
+        private SplashImagePanel(Image splashImage) {
+            this.splashImage = splashImage;
+            setOpaque(true);
+            setBackground(AppTheme.WHITE);
+        }
+
+        @Override
+        protected void paintComponent(Graphics graphics) {
+            super.paintComponent(graphics);
+
+            if (splashImage == null) {
+                return;
+            }
+
+            int panelWidth = getWidth();
+            int panelHeight = getHeight();
+
+            int imageWidth = splashImage.getWidth(this);
+            int imageHeight = splashImage.getHeight(this);
+
+            if (panelWidth <= 0
+                    || panelHeight <= 0
+                    || imageWidth <= 0
+                    || imageHeight <= 0) {
+                return;
+            }
+
+            /*
+             * Usa la escala menor para mostrar la imagen completa
+             * sin recortar el logo, el título ni la barra de carga.
+             */
+            double scale = Math.min(
+                    (double) panelWidth / imageWidth,
+                    (double) panelHeight / imageHeight
+            );
+
+            int scaledWidth = (int) Math.round(
+                    imageWidth * scale
+            );
+
+            int scaledHeight = (int) Math.round(
+                    imageHeight * scale
+            );
+
+            int x = (panelWidth - scaledWidth) / 2;
+            int y = (panelHeight - scaledHeight) / 2;
+
+            graphics.drawImage(
+                    splashImage,
+                    x,
+                    y,
+                    scaledWidth,
+                    scaledHeight,
+                    this
+            );
+        }
     }
 }
