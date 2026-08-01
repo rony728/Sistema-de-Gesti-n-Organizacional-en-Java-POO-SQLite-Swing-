@@ -40,7 +40,14 @@ public class EmpleadoDao extends DaoSupport implements CrudDao<Empleado, Long> {
                 c.descripcion AS cargo_descripcion,
                 d.id AS departamento_id,
                 d.nombre AS departamento_nombre,
-                d.codigo AS departamento_codigo,
+                d.presupuesto AS departamento_presupuesto,
+                d.activo AS departamento_activo,
+                emp.id AS empresa_id,
+                emp.nombre AS empresa_nombre,
+                emp.rtn AS empresa_rtn,
+                emp.telefono AS empresa_telefono,
+                emp.correo_electronico AS empresa_correo,
+                emp.direccion AS empresa_direccion,
                 pa.id AS pais_id,
                 pa.nombre AS pais_nombre,
                 pa.codigo_iso AS pais_codigo_iso
@@ -48,7 +55,8 @@ public class EmpleadoDao extends DaoSupport implements CrudDao<Empleado, Long> {
             INNER JOIN persona p ON p.id = e.id
             INNER JOIN cargo c ON c.id = e.cargo_id
             INNER JOIN departamento d ON d.id = e.departamento_id
-            INNER JOIN pais pa ON pa.id = d.pais_id
+            INNER JOIN empresa emp ON emp.id = d.empresa_id
+            INNER JOIN pais pa ON pa.id = emp.pais_id
             """;
     private static final String INSERT_EMPLEADO_SQL = """
             INSERT INTO empleado (id, cargo_id, departamento_id, codigo_empleado, fecha_contratacion, salario, foto_ruta)

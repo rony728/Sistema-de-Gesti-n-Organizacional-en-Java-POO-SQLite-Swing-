@@ -3,12 +3,13 @@ package edu.university.system.view;
 import edu.university.system.model.Departamento;
 
 import javax.swing.table.AbstractTableModel;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 final class DepartamentoTableModel extends AbstractTableModel {
 
-    private static final String[] COLUMN_NAMES = {"ID", "Pais", "Nombre", "Codigo"};
+    private static final String[] COLUMN_NAMES = {"ID", "Empresa", "Departamento", "Presupuesto", "Activo"};
     private final List<Departamento> departamentos;
 
     DepartamentoTableModel() {
@@ -44,7 +45,12 @@ final class DepartamentoTableModel extends AbstractTableModel {
 
     @Override
     public Class<?> getColumnClass(int columnIndex) {
-        return columnIndex == 0 ? Long.class : String.class;
+        return switch (columnIndex) {
+            case 0 -> Long.class;
+            case 3 -> BigDecimal.class;
+            case 4 -> Boolean.class;
+            default -> String.class;
+        };
     }
 
     @Override
@@ -57,9 +63,10 @@ final class DepartamentoTableModel extends AbstractTableModel {
         Departamento departamento = departamentos.get(rowIndex);
         return switch (columnIndex) {
             case 0 -> departamento.getId();
-            case 1 -> departamento.getPais() == null ? "" : departamento.getPais().getNombre();
+            case 1 -> departamento.getEmpresa() == null ? "" : departamento.getEmpresa().getNombre();
             case 2 -> departamento.getNombre();
-            case 3 -> departamento.getCodigo();
+            case 3 -> departamento.getPresupuesto();
+            case 4 -> departamento.isActivo();
             default -> "";
         };
     }

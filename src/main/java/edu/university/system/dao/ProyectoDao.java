@@ -33,14 +33,10 @@ public class ProyectoDao extends DaoSupport implements CrudDao<Proyecto, Long> {
                 e.direccion AS empresa_direccion,
                 p.id AS pais_id,
                 p.nombre AS pais_nombre,
-                p.codigo_iso AS pais_codigo_iso,
-                d.id AS departamento_id,
-                d.nombre AS departamento_nombre,
-                d.codigo AS departamento_codigo
+                p.codigo_iso AS pais_codigo_iso
             FROM proyecto pr
             INNER JOIN empresa e ON e.id = pr.empresa_id
             INNER JOIN pais p ON p.id = e.pais_id
-            INNER JOIN departamento d ON d.id = e.departamento_id
             """;
     private static final String INSERT_SQL = """
             INSERT INTO proyecto (empresa_id, codigo, nombre, descripcion, fecha_inicio, fecha_fin, presupuesto)

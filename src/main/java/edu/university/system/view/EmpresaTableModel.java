@@ -8,7 +8,7 @@ import java.util.List;
 
 final class EmpresaTableModel extends AbstractTableModel {
 
-    private static final String[] COLUMN_NAMES = {"ID", "Nombre", "RTN", "Telefono", "Correo", "Pais", "Departamento", "Direccion"};
+    private static final String[] COLUMN_NAMES = {"ID", "Nombre", "RTN", "Telefono", "Correo", "Pais", "Direccion"};
     private final List<Empresa> empresas;
 
     EmpresaTableModel() {
@@ -62,8 +62,7 @@ final class EmpresaTableModel extends AbstractTableModel {
             case 3 -> empresa.getTelefono();
             case 4 -> empresa.getCorreoElectronico();
             case 5 -> empresa.getPais() == null ? "" : empresa.getPais().getNombre();
-            case 6 -> empresa.getDepartamento() == null ? "" : empresa.getDepartamento().getNombre();
-            case 7 -> empresa.getDireccion();
+            case 6 -> empresa.getDireccion();
             default -> "";
         };
     }

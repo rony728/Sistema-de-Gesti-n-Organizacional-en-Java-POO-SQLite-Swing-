@@ -1,27 +1,20 @@
 package edu.university.system.model;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-
 /**
- * Entidad de catalogo que agrupa departamentos y permite ubicar empresas y
- * empleados por pais.
+ * Entidad de catalogo para paises. Se conserva como dato independiente de
+ * ubicacion o nacionalidad y no es propietario de departamentos
+ * organizacionales.
  */
 public class Pais {
 
     private Long id;
     private String nombre;
     private String codigoIso;
-    private final List<Departamento> departamentos;
 
     public Pais() {
-        this.departamentos = new ArrayList<>();
     }
 
     public Pais(Long id, String nombre, String codigoIso) {
-        this();
         this.id = id;
         this.nombre = nombre;
         this.codigoIso = codigoIso;
@@ -49,30 +42,6 @@ public class Pais {
 
     public void setCodigoIso(String codigoIso) {
         this.codigoIso = codigoIso;
-    }
-
-    public List<Departamento> getDepartamentos() {
-        return Collections.unmodifiableList(departamentos);
-    }
-
-    public void agregarDepartamento(Departamento departamento) {
-        Objects.requireNonNull(departamento, "El departamento no puede ser nulo.");
-        if (!departamentos.contains(departamento)) {
-            departamentos.add(departamento);
-        }
-        if (departamento.getPais() != this) {
-            departamento.setPais(this);
-        }
-    }
-
-    public void removerDepartamento(Departamento departamento) {
-        if (departamento == null) {
-            return;
-        }
-        departamentos.remove(departamento);
-        if (departamento.getPais() == this) {
-            departamento.setPais(null);
-        }
     }
 
     @Override

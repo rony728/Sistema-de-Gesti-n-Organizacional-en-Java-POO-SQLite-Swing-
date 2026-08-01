@@ -60,7 +60,5 @@ public class EmpresaController extends ControllerSupport {
         validateOptionalEmail(empresa.getCorreoElectronico(), "Correo electronico de la empresa");
         requireObject(empresa.getPais(), "Pais de la empresa");
         requireId(empresa.getPais().getId(), "Pais de la empresa");
-        requireObject(empresa.getDepartamento(), "Departamento de la empresa");
-        requireId(empresa.getDepartamento().getId(), "Departamento de la empresa");
     }
 }
