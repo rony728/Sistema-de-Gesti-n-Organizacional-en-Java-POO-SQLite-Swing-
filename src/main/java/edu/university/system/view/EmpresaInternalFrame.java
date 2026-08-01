@@ -83,6 +83,7 @@ public final class EmpresaInternalFrame extends JInternalFrame {
     }
 
     private void configureFrame() {
+        WindowIconUtils.applyTo(this);
         setSize(1040, 600);
         setMinimumSize(new java.awt.Dimension(900, 500));
     }

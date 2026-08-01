@@ -56,6 +56,7 @@ public final class CargoInternalFrame extends JInternalFrame {
     }
 
     private void configureFrame() {
+        WindowIconUtils.applyTo(this);
         setSize(760, 500);
         setMinimumSize(new java.awt.Dimension(680, 420));
     }

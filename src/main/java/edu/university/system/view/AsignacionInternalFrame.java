@@ -80,6 +80,7 @@ public final class AsignacionInternalFrame extends JInternalFrame {
     }
 
     private void configureFrame() {
+        WindowIconUtils.applyTo(this);
         setSize(980, 580);
         setMinimumSize(new java.awt.Dimension(860, 480));
     }

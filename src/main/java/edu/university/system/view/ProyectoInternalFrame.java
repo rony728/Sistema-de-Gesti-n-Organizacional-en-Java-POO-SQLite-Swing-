@@ -75,6 +75,7 @@ public final class ProyectoInternalFrame extends JInternalFrame {
     }
 
     private void configureFrame() {
+        WindowIconUtils.applyTo(this);
         setSize(980, 600);
         setMinimumSize(new java.awt.Dimension(880, 500));
     }

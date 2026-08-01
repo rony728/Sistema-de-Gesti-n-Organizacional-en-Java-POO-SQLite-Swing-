@@ -69,6 +69,7 @@ public final class MainWindow extends JFrame {
         this.session = session;
         this.logoutHandler = logoutHandler;
 
+        WindowIconUtils.applyTo(this);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1024, 680));
         setLocationRelativeTo(null);
@@ -629,6 +630,7 @@ public final class MainWindow extends JFrame {
         JOptionPane.showMessageDialog(
                 this,
                 appConfig.getApplicationName()
+                + "\nProyecto de Rony Turcios "        
                 + "\nVersion "
                 + appConfig.getApplicationVersion(),
                 "Acerca de",

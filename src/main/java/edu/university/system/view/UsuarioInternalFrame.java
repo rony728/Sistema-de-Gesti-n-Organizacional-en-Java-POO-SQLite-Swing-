@@ -69,6 +69,7 @@ public final class UsuarioInternalFrame extends JInternalFrame {
     }
 
     private void configureFrame() {
+        WindowIconUtils.applyTo(this);
         setSize(980, 580);
         setMinimumSize(new java.awt.Dimension(850, 480));
     }

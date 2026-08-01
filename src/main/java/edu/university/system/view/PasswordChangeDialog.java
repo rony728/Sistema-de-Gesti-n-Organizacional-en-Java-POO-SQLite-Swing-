@@ -40,6 +40,7 @@ public final class PasswordChangeDialog extends JDialog {
         this.confirmationField = new JPasswordField(24);
         this.passwordChanged = false;
 
+        WindowIconUtils.applyTo(this);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setContentPane(createContent());
         pack();

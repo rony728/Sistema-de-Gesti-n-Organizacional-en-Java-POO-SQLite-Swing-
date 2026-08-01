@@ -39,6 +39,7 @@ public final class LoginView extends JDialog {
         this.authenticated = false;
         this.session = null;
 
+        WindowIconUtils.applyTo(this);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setContentPane(createContent(appConfig));
         pack();

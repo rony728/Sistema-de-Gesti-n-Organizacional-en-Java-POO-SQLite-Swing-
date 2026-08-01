@@ -64,6 +64,7 @@ public final class DepartamentoInternalFrame extends JInternalFrame {
     }
 
     private void configureFrame() {
+        WindowIconUtils.applyTo(this);
         setSize(860, 540);
         setMinimumSize(new java.awt.Dimension(760, 440));
     }

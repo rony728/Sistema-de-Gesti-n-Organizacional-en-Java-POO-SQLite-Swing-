@@ -102,6 +102,7 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
     }
 
     private void configureFrame() {
+        WindowIconUtils.applyTo(this);
         setSize(1120, 660);
         setMinimumSize(new java.awt.Dimension(980, 560));
     }
