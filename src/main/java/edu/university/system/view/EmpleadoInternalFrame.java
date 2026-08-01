@@ -3,12 +3,14 @@ package edu.university.system.view;
 import edu.university.system.controller.CargoController;
 import edu.university.system.controller.DepartamentoController;
 import edu.university.system.controller.EmpleadoController;
+import edu.university.system.controller.EmpresaController;
 import edu.university.system.controller.AuthorizationService;
 import edu.university.system.controller.Permission;
 import edu.university.system.controller.ValidationException;
 import edu.university.system.model.Cargo;
 import edu.university.system.model.Departamento;
 import edu.university.system.model.Empleado;
+import edu.university.system.model.Empresa;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -45,6 +47,7 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
     private final EmpleadoController empleadoController;
     private final CargoController cargoController;
     private final DepartamentoController departamentoController;
+    private final EmpresaController empresaController;
     private final EmpleadoTableModel tableModel;
     private final JTable empleadoTable;
     private final JTextField idField;
@@ -62,18 +65,21 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
     private final JTextField searchField;
     private final JLabel fotografiaPreviewLabel;
     private final JComboBox<Cargo> cargoComboBox;
+    private final JComboBox<Empresa> empresaComboBox;
     private final JComboBox<Departamento> departamentoComboBox;
     private Long selectedEmpleadoId;
 
     public EmpleadoInternalFrame(
             EmpleadoController empleadoController,
             CargoController cargoController,
-            DepartamentoController departamentoController
+            DepartamentoController departamentoController,
+            EmpresaController empresaController
     ) {
         super("Modulo Empleados", true, true, true, true);
         this.empleadoController = empleadoController;
         this.cargoController = cargoController;
         this.departamentoController = departamentoController;
+        this.empresaController = empresaController;
         this.tableModel = new EmpleadoTableModel();
         this.empleadoTable = new JTable(tableModel);
         this.idField = new JTextField(8);
@@ -91,6 +97,7 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
         this.searchField = new JTextField(28);
         this.fotografiaPreviewLabel = new JLabel("Sin fotografia", SwingConstants.CENTER);
         this.cargoComboBox = new JComboBox<>();
+        this.empresaComboBox = new JComboBox<>();
         this.departamentoComboBox = new JComboBox<>();
         this.selectedEmpleadoId = null;
 
@@ -154,10 +161,12 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
         addField(formPanel, c, 2, 4, "Contratacion", fechaContratacionField);
         addField(formPanel, c, 4, 4, "Salario", salarioField);
         addCombo(formPanel, c, 0, 5, "Cargo", cargoComboBox);
-        addCombo(formPanel, c, 3, 5, "Departamento", departamentoComboBox);
+        addCombo(formPanel, c, 3, 5, "Empresa", empresaComboBox);
+        addCombo(formPanel, c, 0, 6, "Departamento", departamentoComboBox);
         addPhotoField(formPanel, c);
         addSearchField(formPanel, c);
 
+        empresaComboBox.addActionListener(event -> loadDepartamentosBySelectedEmpresa());
         ViewFeedback.addInstantSearch(searchField, this::searchEmpleados);
 
         return formPanel;
@@ -223,7 +232,7 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
 
     private void addSearchField(JPanel panel, GridBagConstraints c) {
         c.gridx = 0;
-        c.gridy = 7;
+        c.gridy = 8;
         c.gridwidth = 1;
         c.weightx = 0;
         panel.add(new JLabel("Buscar"), c);
@@ -236,7 +245,7 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
     private void addPhotoField(JPanel panel, GridBagConstraints c) {
         fotografiaField.setEditable(false);
         c.gridx = 0;
-        c.gridy = 6;
+        c.gridy = 7;
         c.gridwidth = 1;
         c.weightx = 0;
         panel.add(new JLabel("Ruta foto"), c);
@@ -284,12 +293,28 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
             for (Cargo cargo : cargoController.listar()) {
                 cargoComboBox.addItem(cargo);
             }
-            departamentoComboBox.removeAllItems();
-            for (Departamento departamento : departamentoController.listar()) {
+            empresaComboBox.removeAllItems();
+            for (Empresa empresa : empresaController.listar()) {
+                empresaComboBox.addItem(empresa);
+            }
+            loadDepartamentosBySelectedEmpresa();
+        } catch (RuntimeException exception) {
+            showError("No se pudieron cargar los catalogos.", exception);
+        }
+    }
+
+    private void loadDepartamentosBySelectedEmpresa() {
+        departamentoComboBox.removeAllItems();
+        Empresa selectedEmpresa = (Empresa) empresaComboBox.getSelectedItem();
+        if (selectedEmpresa == null || selectedEmpresa.getId() == null) {
+            return;
+        }
+        try {
+            for (Departamento departamento : departamentoController.listarPorEmpresa(selectedEmpresa.getId())) {
                 departamentoComboBox.addItem(departamento);
             }
         } catch (RuntimeException exception) {
-            showError("No se pudieron cargar los catalogos.", exception);
+            showError("No se pudieron cargar los departamentos de la empresa.", exception);
         }
     }
 
@@ -337,6 +362,7 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
         fotografiaField.setText(empleado.getRutaFotografia());
         updatePhotoPreview(empleado.getRutaFotografia());
         selectCargo(empleado.getCargo());
+        selectEmpresa(empleado.getDepartamento() == null ? null : empleado.getDepartamento().getEmpresa());
         selectDepartamento(empleado.getDepartamento());
     }
 
@@ -372,6 +398,7 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
                 fechaContratacionField,
                 salarioField,
                 cargoComboBox,
+                empresaComboBox,
                 departamentoComboBox
         );
         boolean invalid = false;
@@ -383,6 +410,7 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
         invalid |= ViewFeedback.markInvalidRequiredDate(fechaContratacionField, "Fecha de contratacion");
         invalid |= ViewFeedback.markInvalidDecimal(salarioField, "Salario");
         invalid |= ViewFeedback.markEmptyCombo(cargoComboBox, "Seleccione un cargo.");
+        invalid |= ViewFeedback.markEmptyCombo(empresaComboBox, "Seleccione una empresa.");
         invalid |= ViewFeedback.markEmptyCombo(departamentoComboBox, "Seleccione un departamento.");
         if (correoField.getText() != null && !correoField.getText().isBlank() && !correoField.getText().contains("@")) {
             ViewFeedback.markInvalid(correoField, "Ingrese un correo electronico valido.");
@@ -493,10 +521,14 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
                 fechaContratacionField,
                 salarioField,
                 cargoComboBox,
+                empresaComboBox,
                 departamentoComboBox
         );
         if (cargoComboBox.getItemCount() > 0) {
             cargoComboBox.setSelectedIndex(0);
+        }
+        if (empresaComboBox.getItemCount() > 0) {
+            empresaComboBox.setSelectedIndex(0);
         }
         if (departamentoComboBox.getItemCount() > 0) {
             departamentoComboBox.setSelectedIndex(0);
@@ -576,6 +608,20 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
             Departamento item = departamentoComboBox.getItemAt(index);
             if (departamento.getId().equals(item.getId())) {
                 departamentoComboBox.setSelectedIndex(index);
+                return;
+            }
+        }
+    }
+
+    private void selectEmpresa(Empresa empresa) {
+        if (empresa == null || empresa.getId() == null) {
+            return;
+        }
+        for (int index = 0; index < empresaComboBox.getItemCount(); index++) {
+            Empresa item = empresaComboBox.getItemAt(index);
+            if (empresa.getId().equals(item.getId())) {
+                empresaComboBox.setSelectedIndex(index);
+                loadDepartamentosBySelectedEmpresa();
                 return;
             }
         }

@@ -3,6 +3,7 @@ package edu.university.system.controller;
 import edu.university.system.dao.DepartamentoDao;
 import edu.university.system.model.Departamento;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,14 +49,28 @@ public class DepartamentoController extends ControllerSupport {
         return departamentoDao.buscar(criterio);
     }
 
+    public List<Departamento> listarPorEmpresa(Long empresaId) {
+        requireId(empresaId, "Empresa");
+        return departamentoDao.listarPorEmpresa(empresaId);
+    }
+
     private void validarDepartamento(Departamento departamento, boolean requireEntityId) {
         requireObject(departamento, "Departamento");
         if (requireEntityId) {
             requireId(departamento.getId(), "Departamento");
         }
         requireText(departamento.getNombre(), "Nombre del departamento", 2);
-        requireText(departamento.getCodigo(), "Codigo del departamento", 2);
-        requireObject(departamento.getPais(), "Pais del departamento");
-        requireId(departamento.getPais().getId(), "Pais del departamento");
+        requireObject(departamento.getEmpresa(), "Empresa del departamento");
+        Long empresaId = departamento.getEmpresa().getId();
+        requireId(empresaId, "Empresa del departamento");
+        if (departamento.getPresupuesto() == null) {
+            throw new ValidationException("Presupuesto del departamento es requerido.");
+        }
+        if (departamento.getPresupuesto().compareTo(BigDecimal.ZERO) < 0) {
+            throw new ValidationException("Presupuesto del departamento debe ser igual o mayor que cero.");
+        }
+        if (departamentoDao.existeDuplicado(empresaId, departamento.getNombre(), departamento.getId())) {
+            throw new ValidationException("Ya existe un departamento con ese nombre para la empresa seleccionada.");
+        }
     }
 }

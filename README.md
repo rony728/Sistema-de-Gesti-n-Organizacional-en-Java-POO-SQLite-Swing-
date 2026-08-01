@@ -54,9 +54,10 @@ Las vistas no ejecutan SQL. Los DAO no muestran ventanas. Los controladores no c
 
 ## Relaciones
 
-- Un pais tiene departamentos.
-- Un departamento pertenece a un pais.
-- Una empresa pertenece a un pais y departamento.
+- Pais se conserva como catalogo independiente de ubicacion.
+- Una empresa pertenece a un pais.
+- Una empresa tiene departamentos organizacionales.
+- Un departamento organizacional pertenece a una empresa.
 - Un proyecto pertenece a una empresa.
 - Un empleado hereda datos de persona, tiene cargo y departamento.
 - Una asignacion relaciona empleado y proyecto.
@@ -216,6 +217,7 @@ mvn clean test
 ```
 
 Cubren autenticacion, autorizacion, validaciones de controladores, DAO, integridad referencial, transacciones de empleado y exportacion PDF/Excel.
+Tambien verifican que Departamento sea una unidad organizacional asociada a Empresa y que la migracion desde bases antiguas con departamentos geograficos sea idempotente.
 
 ## Solucion de problemas
 

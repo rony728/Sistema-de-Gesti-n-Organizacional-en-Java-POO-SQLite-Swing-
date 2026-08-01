@@ -347,7 +347,7 @@ public final class MainWindow extends JFrame {
         DepartamentoInternalFrame departamentoInternalFrame =
                 new DepartamentoInternalFrame(
                         controllerFactory.departamentoController(),
-                        controllerFactory.paisController()
+                        controllerFactory.empresaController()
                 );
 
         desktopPane.add(departamentoInternalFrame);
@@ -426,8 +426,7 @@ public final class MainWindow extends JFrame {
         EmpresaInternalFrame empresaInternalFrame =
                 new EmpresaInternalFrame(
                         controllerFactory.empresaController(),
-                        controllerFactory.paisController(),
-                        controllerFactory.departamentoController()
+                        controllerFactory.paisController()
                 );
 
         desktopPane.add(empresaInternalFrame);
@@ -508,7 +507,8 @@ public final class MainWindow extends JFrame {
                 new EmpleadoInternalFrame(
                         controllerFactory.empleadoController(),
                         controllerFactory.cargoController(),
-                        controllerFactory.departamentoController()
+                        controllerFactory.departamentoController(),
+                        controllerFactory.empresaController()
                 );
 
         desktopPane.add(empleadoInternalFrame);

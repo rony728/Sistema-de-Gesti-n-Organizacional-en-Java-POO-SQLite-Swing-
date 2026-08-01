@@ -1,12 +1,10 @@
 package edu.university.system.view;
 
 import edu.university.system.controller.AuthorizationService;
-import edu.university.system.controller.DepartamentoController;
 import edu.university.system.controller.EmpresaController;
 import edu.university.system.controller.PaisController;
 import edu.university.system.controller.Permission;
 import edu.university.system.controller.ValidationException;
-import edu.university.system.model.Departamento;
 import edu.university.system.model.Empresa;
 import edu.university.system.model.Pais;
 
@@ -29,19 +27,16 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Formulario MDI para el CRUD de empresas. Consume controladores, filtra
- * departamentos por pais y adapta las acciones de escritura segun permisos de
- * la sesion.
+ * Formulario MDI para el CRUD de empresas. Consume controladores y adapta las
+ * acciones de escritura segun permisos de la sesion.
  */
 public final class EmpresaInternalFrame extends JInternalFrame {
 
     private final EmpresaController empresaController;
     private final PaisController paisController;
-    private final DepartamentoController departamentoController;
     private final EmpresaTableModel tableModel;
     private final JTable empresaTable;
     private final JTextField idField;
@@ -52,15 +47,12 @@ public final class EmpresaInternalFrame extends JInternalFrame {
     private final JTextField direccionField;
     private final JTextField searchField;
     private final JComboBox<Pais> paisComboBox;
-    private final JComboBox<Departamento> departamentoComboBox;
-    private List<Departamento> departamentos;
     private Long selectedEmpresaId;
 
-    public EmpresaInternalFrame(EmpresaController empresaController, PaisController paisController, DepartamentoController departamentoController) {
+    public EmpresaInternalFrame(EmpresaController empresaController, PaisController paisController) {
         super("Modulo Empresas", true, true, true, true);
         this.empresaController = empresaController;
         this.paisController = paisController;
-        this.departamentoController = departamentoController;
         this.tableModel = new EmpresaTableModel();
         this.empresaTable = new JTable(tableModel);
         this.idField = new JTextField(8);
@@ -71,8 +63,6 @@ public final class EmpresaInternalFrame extends JInternalFrame {
         this.direccionField = new JTextField(36);
         this.searchField = new JTextField(28);
         this.paisComboBox = new JComboBox<>();
-        this.departamentoComboBox = new JComboBox<>();
-        this.departamentos = new ArrayList<>();
         this.selectedEmpresaId = null;
 
         configureFrame();
@@ -122,7 +112,6 @@ public final class EmpresaInternalFrame extends JInternalFrame {
 
         addField(formPanel, constraints, 0, 0, "ID", idField);
         addField(formPanel, constraints, 2, 0, "Pais", paisComboBox);
-        addField(formPanel, constraints, 4, 0, "Departamento", departamentoComboBox);
         addField(formPanel, constraints, 0, 1, "Nombre", nombreField);
         addField(formPanel, constraints, 2, 1, "RTN", rtnField);
         addField(formPanel, constraints, 4, 1, "Telefono", telefonoField);
@@ -130,7 +119,6 @@ public final class EmpresaInternalFrame extends JInternalFrame {
         addField(formPanel, constraints, 2, 2, "Direccion", direccionField);
         addField(formPanel, constraints, 0, 3, "Buscar", searchField);
 
-        paisComboBox.addActionListener(event -> filterDepartamentosByPais());
         ViewFeedback.addInstantSearch(searchField, this::searchEmpresas);
         return formPanel;
     }
@@ -173,23 +161,8 @@ public final class EmpresaInternalFrame extends JInternalFrame {
             for (Pais pais : paisController.listar()) {
                 paisComboBox.addItem(pais);
             }
-            departamentos = departamentoController.listar();
-            filterDepartamentosByPais();
         } catch (RuntimeException exception) {
-            showError("No se pudieron cargar paises y departamentos.", exception);
-        }
-    }
-
-    private void filterDepartamentosByPais() {
-        Pais selectedPais = (Pais) paisComboBox.getSelectedItem();
-        departamentoComboBox.removeAllItems();
-        if (selectedPais == null || selectedPais.getId() == null) {
-            return;
-        }
-        for (Departamento departamento : departamentos) {
-            if (departamento.getPais() != null && selectedPais.getId().equals(departamento.getPais().getId())) {
-                departamentoComboBox.addItem(departamento);
-            }
+            showError("No se pudieron cargar los paises.", exception);
         }
     }
 
@@ -230,7 +203,6 @@ public final class EmpresaInternalFrame extends JInternalFrame {
         correoField.setText(empresa.getCorreoElectronico());
         direccionField.setText(empresa.getDireccion());
         selectPais(empresa.getPais());
-        selectDepartamento(empresa.getDepartamento());
     }
 
     private void saveEmpresa() {
@@ -255,10 +227,9 @@ public final class EmpresaInternalFrame extends JInternalFrame {
     }
 
     private boolean validateForm() {
-        ViewFeedback.clearInvalid(nombreField, rtnField, telefonoField, correoField, direccionField, paisComboBox, departamentoComboBox);
+        ViewFeedback.clearInvalid(nombreField, rtnField, telefonoField, correoField, direccionField, paisComboBox);
         boolean invalid = false;
         invalid |= ViewFeedback.markEmptyCombo(paisComboBox, "Seleccione un pais.");
-        invalid |= ViewFeedback.markEmptyCombo(departamentoComboBox, "Seleccione un departamento.");
         invalid |= ViewFeedback.markBlank(nombreField, "Ingrese el nombre de la empresa.");
         invalid |= ViewFeedback.markBlank(rtnField, "Ingrese el RTN.");
         invalid |= ViewFeedback.markBlank(direccionField, "Ingrese la direccion.");
@@ -284,8 +255,7 @@ public final class EmpresaInternalFrame extends JInternalFrame {
                 telefonoField.getText(),
                 correoField.getText(),
                 direccionField.getText(),
-                (Pais) paisComboBox.getSelectedItem(),
-                (Departamento) departamentoComboBox.getSelectedItem()
+                (Pais) paisComboBox.getSelectedItem()
         );
     }
 
@@ -318,7 +288,7 @@ public final class EmpresaInternalFrame extends JInternalFrame {
         if (paisComboBox.getItemCount() > 0) {
             paisComboBox.setSelectedIndex(0);
         }
-        ViewFeedback.clearInvalid(nombreField, rtnField, telefonoField, correoField, direccionField, paisComboBox, departamentoComboBox);
+        ViewFeedback.clearInvalid(nombreField, rtnField, telefonoField, correoField, direccionField, paisComboBox);
         empresaTable.clearSelection();
     }
 
@@ -329,18 +299,6 @@ public final class EmpresaInternalFrame extends JInternalFrame {
         for (int index = 0; index < paisComboBox.getItemCount(); index++) {
             if (pais.getId().equals(paisComboBox.getItemAt(index).getId())) {
                 paisComboBox.setSelectedIndex(index);
-                return;
-            }
-        }
-    }
-
-    private void selectDepartamento(Departamento departamento) {
-        if (departamento == null || departamento.getId() == null) {
-            return;
-        }
-        for (int index = 0; index < departamentoComboBox.getItemCount(); index++) {
-            if (departamento.getId().equals(departamentoComboBox.getItemAt(index).getId())) {
-                departamentoComboBox.setSelectedIndex(index);
                 return;
             }
         }

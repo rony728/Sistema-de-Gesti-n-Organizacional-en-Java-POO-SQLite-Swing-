@@ -1,24 +1,34 @@
 package edu.university.system.model;
 
+import java.math.BigDecimal;
+
 /**
- * Entidad territorial asociada a un pais. Se usa para clasificar empresas y
- * empleados manteniendo la relacion bidireccional con Pais.
+ * Departamento interno de una empresa. Representa una unidad organizacional
+ * como Recursos Humanos, Finanzas, Tecnologia u Operaciones.
  */
 public class Departamento {
 
     private Long id;
+    private Empresa empresa;
     private String nombre;
-    private String codigo;
-    private Pais pais;
+    private BigDecimal presupuesto;
+    private boolean activo;
 
     public Departamento() {
+        this.presupuesto = BigDecimal.ZERO;
+        this.activo = true;
     }
 
-    public Departamento(Long id, String nombre, String codigo, Pais pais) {
+    public Departamento(Long id, Empresa empresa, String nombre, BigDecimal presupuesto) {
+        this(id, empresa, nombre, presupuesto, true);
+    }
+
+    public Departamento(Long id, Empresa empresa, String nombre, BigDecimal presupuesto, boolean activo) {
         this.id = id;
+        this.empresa = empresa;
         this.nombre = nombre;
-        this.codigo = codigo;
-        setPais(pais);
+        this.presupuesto = presupuesto == null ? BigDecimal.ZERO : presupuesto;
+        this.activo = activo;
     }
 
     public Long getId() {
@@ -29,6 +39,14 @@ public class Departamento {
         this.id = id;
     }
 
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
+    }
+
     public String getNombre() {
         return nombre;
     }
@@ -37,30 +55,20 @@ public class Departamento {
         this.nombre = nombre;
     }
 
-    public String getCodigo() {
-        return codigo;
+    public BigDecimal getPresupuesto() {
+        return presupuesto;
     }
 
-    public void setCodigo(String codigo) {
-        this.codigo = codigo;
+    public void setPresupuesto(BigDecimal presupuesto) {
+        this.presupuesto = presupuesto == null ? BigDecimal.ZERO : presupuesto;
     }
 
-    public Pais getPais() {
-        return pais;
+    public boolean isActivo() {
+        return activo;
     }
 
-    public void setPais(Pais pais) {
-        if (this.pais == pais) {
-            return;
-        }
-        Pais paisAnterior = this.pais;
-        this.pais = pais;
-        if (paisAnterior != null) {
-            paisAnterior.removerDepartamento(this);
-        }
-        if (pais != null && !pais.getDepartamentos().contains(this)) {
-            pais.agregarDepartamento(this);
-        }
+    public void setActivo(boolean activo) {
+        this.activo = activo;
     }
 
     @Override

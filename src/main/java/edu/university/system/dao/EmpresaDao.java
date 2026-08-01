@@ -1,7 +1,6 @@
 package edu.university.system.dao;
 
 import edu.university.system.config.DatabaseConnection;
-import edu.university.system.model.Departamento;
 import edu.university.system.model.Empresa;
 import edu.university.system.model.Pais;
 
@@ -26,21 +25,17 @@ public class EmpresaDao extends DaoSupport implements CrudDao<Empresa, Long> {
                 e.direccion AS empresa_direccion,
                 p.id AS pais_id,
                 p.nombre AS pais_nombre,
-                p.codigo_iso AS pais_codigo_iso,
-                d.id AS departamento_id,
-                d.nombre AS departamento_nombre,
-                d.codigo AS departamento_codigo
+                p.codigo_iso AS pais_codigo_iso
             FROM empresa e
             INNER JOIN pais p ON p.id = e.pais_id
-            INNER JOIN departamento d ON d.id = e.departamento_id
             """;
     private static final String INSERT_SQL = """
-            INSERT INTO empresa (pais_id, departamento_id, nombre, rtn, telefono, correo_electronico, direccion)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO empresa (pais_id, nombre, rtn, telefono, correo_electronico, direccion)
+            VALUES (?, ?, ?, ?, ?, ?)
             """;
     private static final String UPDATE_SQL = """
             UPDATE empresa
-            SET pais_id = ?, departamento_id = ?, nombre = ?, rtn = ?, telefono = ?,
+            SET pais_id = ?, nombre = ?, rtn = ?, telefono = ?,
                 correo_electronico = ?, direccion = ?, fecha_actualizacion = datetime('now')
             WHERE id = ?
             """;
@@ -53,7 +48,6 @@ public class EmpresaDao extends DaoSupport implements CrudDao<Empresa, Long> {
                 OR lower(coalesce(e.telefono, '')) LIKE lower(?)
                 OR lower(coalesce(e.correo_electronico, '')) LIKE lower(?)
                 OR lower(p.nombre) LIKE lower(?)
-                OR lower(d.nombre) LIKE lower(?)
                 OR lower(coalesce(e.direccion, '')) LIKE lower(?)
              ORDER BY e.nombre
             """;
@@ -67,12 +61,11 @@ public class EmpresaDao extends DaoSupport implements CrudDao<Empresa, Long> {
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS)) {
             statement.setLong(1, requireId(empresa.getPais().getId(), "pais"));
-            statement.setLong(2, requireId(empresa.getDepartamento().getId(), "departamento"));
-            statement.setString(3, empresa.getNombre());
-            statement.setString(4, empresa.getRtn());
-            setStringOrNull(statement, 5, empresa.getTelefono());
-            setStringOrNull(statement, 6, empresa.getCorreoElectronico());
-            setStringOrNull(statement, 7, empresa.getDireccion());
+            statement.setString(2, empresa.getNombre());
+            statement.setString(3, empresa.getRtn());
+            setStringOrNull(statement, 4, empresa.getTelefono());
+            setStringOrNull(statement, 5, empresa.getCorreoElectronico());
+            setStringOrNull(statement, 6, empresa.getDireccion());
             statement.executeUpdate();
             long id = getGeneratedId(statement);
             empresa.setId(id);
@@ -87,13 +80,12 @@ public class EmpresaDao extends DaoSupport implements CrudDao<Empresa, Long> {
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(UPDATE_SQL)) {
             statement.setLong(1, requireId(empresa.getPais().getId(), "pais"));
-            statement.setLong(2, requireId(empresa.getDepartamento().getId(), "departamento"));
-            statement.setString(3, empresa.getNombre());
-            statement.setString(4, empresa.getRtn());
-            setStringOrNull(statement, 5, empresa.getTelefono());
-            setStringOrNull(statement, 6, empresa.getCorreoElectronico());
-            setStringOrNull(statement, 7, empresa.getDireccion());
-            statement.setLong(8, requireId(empresa.getId(), "empresa"));
+            statement.setString(2, empresa.getNombre());
+            statement.setString(3, empresa.getRtn());
+            setStringOrNull(statement, 4, empresa.getTelefono());
+            setStringOrNull(statement, 5, empresa.getCorreoElectronico());
+            setStringOrNull(statement, 6, empresa.getDireccion());
+            statement.setLong(7, requireId(empresa.getId(), "empresa"));
             return statement.executeUpdate() > 0;
         } catch (SQLException exception) {
             throw new DaoException("No se pudo actualizar la empresa.", exception);
@@ -144,7 +136,7 @@ public class EmpresaDao extends DaoSupport implements CrudDao<Empresa, Long> {
         String pattern = "%" + (criterio == null ? "" : criterio.trim()) + "%";
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(SEARCH_SQL)) {
-            for (int index = 1; index <= 7; index++) {
+            for (int index = 1; index <= 6; index++) {
                 statement.setString(index, pattern);
             }
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -164,12 +156,6 @@ public class EmpresaDao extends DaoSupport implements CrudDao<Empresa, Long> {
                 resultSet.getString("pais_nombre"),
                 resultSet.getString("pais_codigo_iso")
         );
-        Departamento departamento = new Departamento(
-                resultSet.getLong("departamento_id"),
-                resultSet.getString("departamento_nombre"),
-                resultSet.getString("departamento_codigo"),
-                pais
-        );
         return new Empresa(
                 resultSet.getLong("empresa_id"),
                 resultSet.getString("empresa_nombre"),
@@ -177,8 +163,7 @@ public class EmpresaDao extends DaoSupport implements CrudDao<Empresa, Long> {
                 resultSet.getString("empresa_telefono"),
                 resultSet.getString("empresa_correo"),
                 resultSet.getString("empresa_direccion"),
-                pais,
-                departamento
+                pais
         );
     }
 }

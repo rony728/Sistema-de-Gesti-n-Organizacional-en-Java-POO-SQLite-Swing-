@@ -41,6 +41,7 @@ public final class DatabaseConnection {
             }
             Class.forName("org.sqlite.JDBC");
             try (Connection connection = getConnection()) {
+                migrateLegacyOrganizationalDepartmentModel(connection);
                 applySchema(connection);
             }
         } catch (IOException exception) {
@@ -84,6 +85,129 @@ public final class DatabaseConnection {
             }
             ensureEmpleadoPhotoColumn(connection);
             ensureKnownDevelopmentPasswords(connection);
+        }
+    }
+
+    private void migrateLegacyOrganizationalDepartmentModel(Connection connection) throws SQLException {
+        if (!tableExists(connection, "departamento")) {
+            return;
+        }
+        boolean hasPaisId = columnExists(connection, "departamento", "pais_id");
+        boolean hasEmpresaId = columnExists(connection, "departamento", "empresa_id");
+        boolean empresaHasDepartamentoId = tableExists(connection, "empresa") && columnExists(connection, "empresa", "departamento_id");
+        if (!hasPaisId && hasEmpresaId && !empresaHasDepartamentoId) {
+            return;
+        }
+
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("PRAGMA foreign_keys = OFF");
+            statement.execute("BEGIN TRANSACTION");
+            try {
+                statement.execute("""
+                        CREATE TABLE IF NOT EXISTS departamento_geografico_backup AS
+                        SELECT * FROM departamento
+                        """);
+                if (tableExists(connection, "empresa") && empresaHasDepartamentoId) {
+                    rebuildEmpresaWithoutDepartamento(statement);
+                }
+                rebuildDepartamentoAsOrganizational(statement, hasPaisId);
+                statement.execute("COMMIT");
+            } catch (SQLException exception) {
+                statement.execute("ROLLBACK");
+                throw exception;
+            } finally {
+                statement.execute("PRAGMA foreign_keys = ON");
+            }
+        }
+    }
+
+    private void rebuildEmpresaWithoutDepartamento(Statement statement) throws SQLException {
+        statement.execute("""
+                CREATE TABLE IF NOT EXISTS empresa_migracion (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    pais_id INTEGER NOT NULL,
+                    nombre TEXT NOT NULL COLLATE NOCASE,
+                    rtn TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                    telefono TEXT,
+                    correo_electronico TEXT UNIQUE COLLATE NOCASE,
+                    direccion TEXT,
+                    activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
+                    fecha_creacion TEXT NOT NULL DEFAULT (datetime('now')),
+                    fecha_actualizacion TEXT,
+                    FOREIGN KEY (pais_id) REFERENCES pais (id) ON UPDATE CASCADE ON DELETE RESTRICT,
+                    CHECK (length(trim(nombre)) >= 2),
+                    CHECK (length(trim(rtn)) >= 8),
+                    CHECK (correo_electronico IS NULL OR instr(correo_electronico, '@') > 1)
+                )
+                """);
+        statement.execute("""
+                INSERT OR IGNORE INTO empresa_migracion (
+                    id, pais_id, nombre, rtn, telefono, correo_electronico, direccion,
+                    activo, fecha_creacion, fecha_actualizacion
+                )
+                SELECT id, pais_id, nombre, rtn, telefono, correo_electronico, direccion,
+                       activo, fecha_creacion, fecha_actualizacion
+                FROM empresa
+                """);
+        statement.execute("DROP TABLE empresa");
+        statement.execute("ALTER TABLE empresa_migracion RENAME TO empresa");
+    }
+
+    private void rebuildDepartamentoAsOrganizational(Statement statement, boolean hasPaisId) throws SQLException {
+        statement.execute("""
+                CREATE TABLE IF NOT EXISTS departamento_migracion (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    empresa_id INTEGER NOT NULL,
+                    nombre TEXT NOT NULL COLLATE NOCASE,
+                    presupuesto NUMERIC NOT NULL DEFAULT 0 CHECK (presupuesto >= 0),
+                    activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
+                    fecha_creacion TEXT NOT NULL DEFAULT (datetime('now')),
+                    fecha_actualizacion TEXT,
+                    FOREIGN KEY (empresa_id) REFERENCES empresa (id) ON UPDATE CASCADE ON DELETE RESTRICT,
+                    UNIQUE (empresa_id, nombre),
+                    CHECK (length(trim(nombre)) >= 2)
+                )
+                """);
+        statement.execute("""
+                INSERT OR IGNORE INTO empresa (id, pais_id, nombre, rtn, telefono, correo_electronico, direccion)
+                VALUES (1, 1, 'Universidad Tecnologica de Honduras', '08019999000001', '2234-5678', 'contacto@uth.local', 'Campus principal')
+                """);
+        if (!hasPaisId) {
+            statement.execute("""
+                    INSERT OR IGNORE INTO departamento_migracion (
+                        id, empresa_id, nombre, presupuesto, activo, fecha_creacion, fecha_actualizacion
+                    )
+                    SELECT id, empresa_id, nombre, presupuesto, activo, fecha_creacion, fecha_actualizacion
+                    FROM departamento
+                    """);
+        }
+        statement.execute("DROP TABLE departamento");
+        statement.execute("ALTER TABLE departamento_migracion RENAME TO departamento");
+    }
+
+    private boolean tableExists(Connection connection, String tableName) throws SQLException {
+        try (var statement = connection.prepareStatement("""
+                SELECT COUNT(1)
+                FROM sqlite_master
+                WHERE type = 'table'
+                  AND name = ?
+                """)) {
+            statement.setString(1, tableName);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() && resultSet.getInt(1) > 0;
+            }
+        }
+    }
+
+    private boolean columnExists(Connection connection, String tableName, String columnName) throws SQLException {
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery("PRAGMA table_info(" + tableName + ")")) {
+            while (resultSet.next()) {
+                if (columnName.equalsIgnoreCase(resultSet.getString("name"))) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

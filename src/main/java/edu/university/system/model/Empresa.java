@@ -6,8 +6,9 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Empresa cliente o responsable de proyectos. Se vincula a pais, departamento y
- * mantiene una coleccion de proyectos relacionados.
+ * Empresa cliente o responsable de proyectos. Conserva su pais de ubicacion y
+ * es propietaria de departamentos organizacionales sin cargarlos desde cada
+ * consulta DAO.
  */
 public class Empresa {
 
@@ -18,10 +19,11 @@ public class Empresa {
     private String correoElectronico;
     private String direccion;
     private Pais pais;
-    private Departamento departamento;
+    private final List<Departamento> departamentos;
     private final List<Proyecto> proyectos;
 
     public Empresa() {
+        this.departamentos = new ArrayList<>();
         this.proyectos = new ArrayList<>();
     }
 
@@ -32,8 +34,7 @@ public class Empresa {
             String telefono,
             String correoElectronico,
             String direccion,
-            Pais pais,
-            Departamento departamento
+            Pais pais
     ) {
         this();
         this.id = id;
@@ -43,7 +44,6 @@ public class Empresa {
         this.correoElectronico = correoElectronico;
         this.direccion = direccion;
         this.pais = pais;
-        this.departamento = departamento;
     }
 
     public Long getId() {
@@ -102,12 +102,28 @@ public class Empresa {
         this.pais = pais;
     }
 
-    public Departamento getDepartamento() {
-        return departamento;
+    public List<Departamento> getDepartamentos() {
+        return Collections.unmodifiableList(departamentos);
     }
 
-    public void setDepartamento(Departamento departamento) {
-        this.departamento = departamento;
+    public void agregarDepartamento(Departamento departamento) {
+        Objects.requireNonNull(departamento, "El departamento no puede ser nulo.");
+        if (!departamentos.contains(departamento)) {
+            departamentos.add(departamento);
+        }
+        if (departamento.getEmpresa() != this) {
+            departamento.setEmpresa(this);
+        }
+    }
+
+    public void removerDepartamento(Departamento departamento) {
+        if (departamento == null) {
+            return;
+        }
+        departamentos.remove(departamento);
+        if (departamento.getEmpresa() == this) {
+            departamento.setEmpresa(null);
+        }
     }
 
     public List<Proyecto> getProyectos() {

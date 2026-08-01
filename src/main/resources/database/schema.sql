@@ -59,25 +59,21 @@ CREATE TABLE IF NOT EXISTS pais (
 
 CREATE TABLE IF NOT EXISTS departamento (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    pais_id INTEGER NOT NULL,
+    empresa_id INTEGER NOT NULL,
     nombre TEXT NOT NULL COLLATE NOCASE,
-    codigo TEXT NOT NULL COLLATE NOCASE,
+    presupuesto NUMERIC NOT NULL DEFAULT 0 CHECK (presupuesto >= 0),
     activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
     fecha_creacion TEXT NOT NULL DEFAULT (datetime('now')),
     fecha_actualizacion TEXT,
-    CONSTRAINT fk_departamento_pais
-        FOREIGN KEY (pais_id)
-        REFERENCES pais (id)
+    CONSTRAINT fk_departamento_empresa
+        FOREIGN KEY (empresa_id)
+        REFERENCES empresa (id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
-    CONSTRAINT uq_departamento_pais_nombre
-        UNIQUE (pais_id, nombre),
-    CONSTRAINT uq_departamento_pais_codigo
-        UNIQUE (pais_id, codigo),
+    CONSTRAINT uq_departamento_empresa_nombre
+        UNIQUE (empresa_id, nombre),
     CONSTRAINT ck_departamento_nombre
-        CHECK (length(trim(nombre)) >= 2),
-    CONSTRAINT ck_departamento_codigo
-        CHECK (length(trim(codigo)) >= 2)
+        CHECK (length(trim(nombre)) >= 2)
 );
 
 CREATE TABLE IF NOT EXISTS cargo (
@@ -149,7 +145,6 @@ CREATE TABLE IF NOT EXISTS empleado (
 CREATE TABLE IF NOT EXISTS empresa (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     pais_id INTEGER NOT NULL,
-    departamento_id INTEGER NOT NULL,
     nombre TEXT NOT NULL COLLATE NOCASE,
     rtn TEXT NOT NULL UNIQUE COLLATE NOCASE,
     telefono TEXT,
@@ -161,11 +156,6 @@ CREATE TABLE IF NOT EXISTS empresa (
     CONSTRAINT fk_empresa_pais
         FOREIGN KEY (pais_id)
         REFERENCES pais (id)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT,
-    CONSTRAINT fk_empresa_departamento
-        FOREIGN KEY (departamento_id)
-        REFERENCES departamento (id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     CONSTRAINT ck_empresa_nombre
@@ -241,8 +231,8 @@ CREATE TABLE IF NOT EXISTS asignacion (
 CREATE INDEX IF NOT EXISTS idx_usuario_rol_id
     ON usuario (rol_id);
 
-CREATE INDEX IF NOT EXISTS idx_departamento_pais_id
-    ON departamento (pais_id);
+CREATE INDEX IF NOT EXISTS idx_departamento_empresa_id
+    ON departamento (empresa_id);
 
 CREATE INDEX IF NOT EXISTS idx_persona_nombre_completo
     ON persona (apellidos, nombres);
@@ -255,9 +245,6 @@ CREATE INDEX IF NOT EXISTS idx_empleado_departamento_id
 
 CREATE INDEX IF NOT EXISTS idx_empresa_pais_id
     ON empresa (pais_id);
-
-CREATE INDEX IF NOT EXISTS idx_empresa_departamento_id
-    ON empresa (departamento_id);
 
 CREATE INDEX IF NOT EXISTS idx_proyecto_empresa_id
     ON proyecto (empresa_id);
@@ -326,98 +313,17 @@ VALUES
     (5, 'Costa Rica', 'CR'),
     (6, 'Panama', 'PA');
 
-INSERT OR IGNORE INTO departamento (id, pais_id, nombre, codigo)
+INSERT OR IGNORE INTO empresa (id, pais_id, nombre, rtn, telefono, correo_electronico, direccion)
 VALUES
-    (1, 1, 'Atlantida', 'ATL'),
-    (2, 1, 'Choluteca', 'CHO'),
-    (3, 1, 'Colon', 'COL'),
-    (4, 1, 'Comayagua', 'COM'),
-    (5, 1, 'Copan', 'COP'),
-    (6, 1, 'Cortes', 'COR'),
-    (7, 1, 'El Paraiso', 'EPA'),
-    (8, 1, 'Francisco Morazan', 'FMO'),
-    (9, 1, 'Gracias a Dios', 'GDI'),
-    (10, 1, 'Intibuca', 'INT'),
-    (11, 1, 'Islas de la Bahia', 'IBA'),
-    (12, 1, 'La Paz', 'LPA'),
-    (13, 1, 'Lempira', 'LEM'),
-    (14, 1, 'Ocotepeque', 'OCO'),
-    (15, 1, 'Olancho', 'OLA'),
-    (16, 1, 'Santa Barbara', 'SBA'),
-    (17, 1, 'Valle', 'VAL'),
-    (18, 1, 'Yoro', 'YOR');
+    (1, 1, 'Universidad Tecnologica de Honduras', '08019999000001', '2234-5678', 'contacto@uth.local', 'Campus principal');
 
-INSERT OR IGNORE INTO departamento (pais_id, nombre, codigo)
+INSERT OR IGNORE INTO departamento (id, empresa_id, nombre, presupuesto, activo)
 VALUES
-    (2, 'Alta Verapaz', 'AV'),
-    (2, 'Baja Verapaz', 'BV'),
-    (2, 'Chimaltenango', 'CHM'),
-    (2, 'Chiquimula', 'CHQ'),
-    (2, 'El Progreso', 'PRO'),
-    (2, 'Escuintla', 'ESC'),
-    (2, 'Guatemala', 'GUA'),
-    (2, 'Huehuetenango', 'HUE'),
-    (2, 'Izabal', 'IZA'),
-    (2, 'Jalapa', 'JAL'),
-    (2, 'Jutiapa', 'JUT'),
-    (2, 'Peten', 'PET'),
-    (2, 'Quetzaltenango', 'QUE'),
-    (2, 'Quiche', 'QUI'),
-    (2, 'Retalhuleu', 'RET'),
-    (2, 'Sacatepequez', 'SAC'),
-    (2, 'San Marcos', 'SMA'),
-    (2, 'Santa Rosa', 'SRO'),
-    (2, 'Solola', 'SOL'),
-    (2, 'Suchitepequez', 'SUC'),
-    (2, 'Totonicapan', 'TOT'),
-    (2, 'Zacapa', 'ZAC'),
-    (3, 'Ahuachapan', 'AHU'),
-    (3, 'Cabanas', 'CAB'),
-    (3, 'Chalatenango', 'CHA'),
-    (3, 'Cuscatlan', 'CUS'),
-    (3, 'La Libertad', 'LLI'),
-    (3, 'La Paz', 'LPA'),
-    (3, 'La Union', 'LUN'),
-    (3, 'Morazan', 'MOR'),
-    (3, 'San Miguel', 'SMI'),
-    (3, 'San Salvador', 'SSA'),
-    (3, 'San Vicente', 'SVI'),
-    (3, 'Santa Ana', 'SAN'),
-    (3, 'Sonsonate', 'SON'),
-    (3, 'Usulutan', 'USU'),
-    (4, 'Boaco', 'BOA'),
-    (4, 'Carazo', 'CAR'),
-    (4, 'Chinandega', 'CHI'),
-    (4, 'Chontales', 'CHO'),
-    (4, 'Esteli', 'EST'),
-    (4, 'Granada', 'GRA'),
-    (4, 'Jinotega', 'JIN'),
-    (4, 'Leon', 'LEO'),
-    (4, 'Madriz', 'MAD'),
-    (4, 'Managua', 'MAN'),
-    (4, 'Masaya', 'MAS'),
-    (4, 'Matagalpa', 'MAT'),
-    (4, 'Nueva Segovia', 'NSE'),
-    (4, 'Rivas', 'RIV'),
-    (4, 'Rio San Juan', 'RSJ'),
-    (5, 'Alajuela', 'ALA'),
-    (5, 'Cartago', 'CAR'),
-    (5, 'Guanacaste', 'GUA'),
-    (5, 'Heredia', 'HER'),
-    (5, 'Limon', 'LIM'),
-    (5, 'Puntarenas', 'PUN'),
-    (5, 'San Jose', 'SJO'),
-    (6, 'Bocas del Toro', 'BDT'),
-    (6, 'Chiriqui', 'CHI'),
-    (6, 'Cocle', 'COC'),
-    (6, 'Colon', 'COL'),
-    (6, 'Darien', 'DAR'),
-    (6, 'Herrera', 'HER'),
-    (6, 'Los Santos', 'LSA'),
-    (6, 'Panama', 'PAN'),
-    (6, 'Panama Oeste', 'POE'),
-    (6, 'Veraguas', 'VER');
-
+    (1, 1, 'Recursos Humanos', 0, 1),
+    (2, 1, 'Finanzas', 0, 1),
+    (3, 1, 'Tecnologia', 0, 1),
+    (4, 1, 'Administracion', 0, 1),
+    (5, 1, 'Ventas', 0, 1);
 INSERT OR IGNORE INTO cargo (id, nombre, descripcion)
 VALUES
     (1, 'Administrador de Sistemas', 'Responsable de administrar configuraciones y seguridad del sistema.'),
@@ -429,3 +335,4 @@ VALUES
 COMMIT;
 
 PRAGMA foreign_key_check;
+
