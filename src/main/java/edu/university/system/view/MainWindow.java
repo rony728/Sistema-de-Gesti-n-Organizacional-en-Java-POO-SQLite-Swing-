@@ -120,19 +120,8 @@ public final class MainWindow extends JFrame {
 
         JMenu systemMenu = new JMenu("Sistema");
 
-        JMenuItem homeItem = new JMenuItem("Inicio");
-        JMenuItem changePasswordItem =
-                new JMenuItem("Cambiar contrasena");
         JMenuItem logoutItem = new JMenuItem("Cerrar sesion");
         JMenuItem exitItem = new JMenuItem("Salir");
-
-        homeItem.addActionListener(
-                event -> showWelcomeMessage()
-        );
-
-        changePasswordItem.addActionListener(
-                event -> changePassword()
-        );
 
         logoutItem.addActionListener(
                 event -> logout()
@@ -144,11 +133,7 @@ public final class MainWindow extends JFrame {
             System.exit(0);
         });
 
-        systemMenu.add(homeItem);
-        systemMenu.addSeparator();
-        systemMenu.add(changePasswordItem);
         systemMenu.add(logoutItem);
-        systemMenu.addSeparator();
         systemMenu.add(exitItem);
 
         JMenu catalogsMenu = new JMenu("Catalogos");
@@ -213,14 +198,16 @@ public final class MainWindow extends JFrame {
             managementMenu.add(usuariosItem);
         }
 
-        JMenu reportsMenu = new JMenu("Reportes");
+        JMenu optionsMenu = new JMenu("Opciones");
 
-        JMenuItem reportsInfoItem = new JMenuItem(
-                "Exportaciones disponibles en Empleados y Proyectos"
+        JMenuItem changePasswordItem =
+                new JMenuItem("Cambiar contrasena");
+
+        changePasswordItem.addActionListener(
+                event -> changePassword()
         );
 
-        reportsInfoItem.setEnabled(false);
-        reportsMenu.add(reportsInfoItem);
+        optionsMenu.add(changePasswordItem);
 
         JMenu helpMenu = new JMenu("Ayuda");
 
@@ -235,7 +222,7 @@ public final class MainWindow extends JFrame {
         menuBar.add(systemMenu);
         menuBar.add(catalogsMenu);
         menuBar.add(managementMenu);
-        menuBar.add(reportsMenu);
+        menuBar.add(optionsMenu);
         menuBar.add(helpMenu);
         styleMenuBar(menuBar);
 
@@ -615,15 +602,6 @@ public final class MainWindow extends JFrame {
                     JOptionPane.WARNING_MESSAGE
             );
         }
-    }
-
-    private void showWelcomeMessage() {
-        JOptionPane.showMessageDialog(
-                this,
-                "Sistema listo para trabajar.",
-                "Inicio",
-                JOptionPane.INFORMATION_MESSAGE
-        );
     }
 
     private void showAboutDialog() {
