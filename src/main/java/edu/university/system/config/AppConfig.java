@@ -2,7 +2,9 @@ package edu.university.system.config;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -47,7 +49,9 @@ public final class AppConfig {
             if (inputStream == null) {
                 throw new IllegalStateException("No se encontro el archivo de configuracion: " + CONFIG_FILE);
             }
-            properties.load(inputStream);
+            try (InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+                properties.load(reader);
+            }
             return new AppConfig(properties);
         } catch (IOException exception) {
             throw new IllegalStateException("No se pudo cargar la configuracion inicial.", exception);

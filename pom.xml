@@ -9,7 +9,7 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>Sistema Universitario</name>
+    <name>Sistema de Gestión Organizacional</name>
     <description>Proyecto final universitario desarrollado con Java, Swing, SQLite, JDBC y arquitectura MVC.</description>
 
     <properties>
