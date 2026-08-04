@@ -1,4 +1,4 @@
-# Sistema de Gestión Organizacional
+# SIGO Sistema de Gestión Organizacional
 
 Sistema de escritorio desarrollado como proyecto final universitario. La aplicacion permite administrar catalogos, empleados, empresas, proyectos, asignaciones, usuarios, autenticacion, permisos, fotografias y exportaciones.
 
