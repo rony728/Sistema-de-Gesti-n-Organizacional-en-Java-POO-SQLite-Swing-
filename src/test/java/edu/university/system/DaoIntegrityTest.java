@@ -116,9 +116,15 @@ class DaoIntegrityTest {
             statement.execute("CREATE TABLE pais (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL UNIQUE, codigo_iso TEXT NOT NULL UNIQUE, activo INTEGER NOT NULL DEFAULT 1, fecha_creacion TEXT NOT NULL DEFAULT (datetime('now')), fecha_actualizacion TEXT)");
             statement.execute("CREATE TABLE departamento (id INTEGER PRIMARY KEY AUTOINCREMENT, pais_id INTEGER NOT NULL, nombre TEXT NOT NULL, codigo TEXT NOT NULL, activo INTEGER NOT NULL DEFAULT 1, fecha_creacion TEXT NOT NULL DEFAULT (datetime('now')), fecha_actualizacion TEXT)");
             statement.execute("CREATE TABLE empresa (id INTEGER PRIMARY KEY AUTOINCREMENT, pais_id INTEGER NOT NULL, departamento_id INTEGER NOT NULL, nombre TEXT NOT NULL, rtn TEXT NOT NULL UNIQUE, telefono TEXT, correo_electronico TEXT UNIQUE, direccion TEXT, activo INTEGER NOT NULL DEFAULT 1, fecha_creacion TEXT NOT NULL DEFAULT (datetime('now')), fecha_actualizacion TEXT)");
+            statement.execute("CREATE TABLE cargo (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL UNIQUE, descripcion TEXT, activo INTEGER NOT NULL DEFAULT 1, fecha_creacion TEXT NOT NULL DEFAULT (datetime('now')), fecha_actualizacion TEXT)");
+            statement.execute("CREATE TABLE persona (id INTEGER PRIMARY KEY AUTOINCREMENT, identidad TEXT NOT NULL UNIQUE, nombres TEXT NOT NULL, apellidos TEXT NOT NULL, telefono TEXT, correo_electronico TEXT UNIQUE, direccion TEXT, fecha_nacimiento TEXT, activo INTEGER NOT NULL DEFAULT 1, fecha_creacion TEXT NOT NULL DEFAULT (datetime('now')), fecha_actualizacion TEXT)");
+            statement.execute("CREATE TABLE empleado (id INTEGER PRIMARY KEY, cargo_id INTEGER NOT NULL, departamento_id INTEGER NOT NULL, codigo_empleado TEXT NOT NULL UNIQUE, fecha_contratacion TEXT NOT NULL, salario NUMERIC NOT NULL DEFAULT 0, foto_ruta TEXT, fecha_creacion TEXT NOT NULL DEFAULT (datetime('now')), fecha_actualizacion TEXT, FOREIGN KEY (id) REFERENCES persona (id) ON DELETE CASCADE, FOREIGN KEY (cargo_id) REFERENCES cargo (id) ON DELETE RESTRICT, FOREIGN KEY (departamento_id) REFERENCES departamento (id) ON DELETE RESTRICT)");
             statement.execute("INSERT INTO pais (id, nombre, codigo_iso) VALUES (1, 'Honduras', 'HN')");
+            statement.execute("INSERT INTO cargo (id, nombre, descripcion) VALUES (1, 'Administrador de Sistemas', 'Administra')");
             statement.execute("INSERT INTO departamento (id, pais_id, nombre, codigo) VALUES (1, 1, 'Atlantida', 'ATL')");
             statement.execute("INSERT INTO empresa (id, pais_id, departamento_id, nombre, rtn, direccion) VALUES (1, 1, 1, 'Empresa Antigua', '12345678', 'Direccion')");
+            statement.execute("INSERT INTO persona (id, identidad, nombres, apellidos, telefono, correo_electronico, direccion, fecha_nacimiento) VALUES (1, '0801199000001', 'Ana', 'Antigua', '9999-1111', 'ana@test.local', 'Direccion', '1990-01-01')");
+            statement.execute("INSERT INTO empleado (id, cargo_id, departamento_id, codigo_empleado, fecha_contratacion, salario, foto_ruta) VALUES (1, 1, 1, 'EMP-LEG', '2024-01-01', 1200, NULL)");
         }
 
         TestSupport.database(database).initialize();
@@ -127,6 +133,10 @@ class DaoIntegrityTest {
 
         assertTrue(daoFactory.empresaDao().buscar("Empresa Antigua").stream().findAny().isPresent());
         assertTrue(daoFactory.departamentoDao().listar().stream().anyMatch(departamento -> "Tecnologia".equals(departamento.getNombre())));
+        assertEquals(0, BigDecimal.ZERO.compareTo(daoFactory.cargoDao().buscarPorId(1L).orElseThrow().getSalarioBase()));
+        assertNotNull(daoFactory.empleadoDao().buscarPorId(1L).orElseThrow().getPais());
+        assertEquals("Honduras", daoFactory.empleadoDao().buscarPorId(1L).orElseThrow().getPais().getNombre());
+        assertFalse(daoFactory.empleadoDao().listarPorEmpresa(1L).isEmpty());
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + database.toAbsolutePath());
              Statement statement = connection.createStatement()) {
             assertTrue(statement.executeQuery("SELECT COUNT(1) FROM departamento_geografico_backup").next());
@@ -136,6 +146,7 @@ class DaoIntegrityTest {
     private Empleado insertEmpleado(DaoFactory daoFactory, String identidad, String codigo) {
         Empresa empresa = daoFactory.empresaDao().buscar("Universidad Tecnologica").stream().findFirst().orElseThrow();
         Departamento departamento = daoFactory.departamentoDao().listarPorEmpresa(empresa.getId()).stream().findFirst().orElseThrow();
+        Pais pais = empresa.getPais();
         Empleado empleado = new Empleado(
                 null,
                 identidad,
@@ -149,7 +160,8 @@ class DaoIntegrityTest {
                 LocalDate.now(),
                 BigDecimal.valueOf(1000),
                 new Cargo(1L, "Administrador de Sistemas", "Administra"),
-                departamento
+                departamento,
+                pais
         );
         daoFactory.empleadoDao().insertar(empleado);
         return empleado;

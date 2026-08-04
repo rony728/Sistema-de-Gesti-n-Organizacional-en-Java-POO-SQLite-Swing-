@@ -54,5 +54,6 @@ public class CargoController extends ControllerSupport {
             requireId(cargo.getId(), "Cargo");
         }
         requireText(cargo.getNombre(), "Nombre del cargo", 2);
+        validateNonNegative(cargo.getSalarioBase(), "Salario base");
     }
 }

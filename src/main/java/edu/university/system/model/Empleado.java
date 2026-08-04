@@ -18,6 +18,7 @@ public class Empleado extends Persona {
     private BigDecimal salario;
     private Cargo cargo;
     private Departamento departamento;
+    private Pais pais;
     private String rutaFotografia;
     private final List<Asignacion> asignaciones;
 
@@ -41,7 +42,7 @@ public class Empleado extends Persona {
             Departamento departamento
     ) {
         this(id, identidad, nombres, apellidos, telefono, correoElectronico, direccion, fechaNacimiento,
-                codigoEmpleado, fechaContratacion, salario, cargo, departamento, null);
+                codigoEmpleado, fechaContratacion, salario, cargo, departamento, null, null);
     }
 
     public Empleado(
@@ -60,6 +61,47 @@ public class Empleado extends Persona {
             Departamento departamento,
             String rutaFotografia
     ) {
+        this(id, identidad, nombres, apellidos, telefono, correoElectronico, direccion, fechaNacimiento,
+                codigoEmpleado, fechaContratacion, salario, cargo, departamento, rutaFotografia, null);
+    }
+
+    public Empleado(
+            Long id,
+            String identidad,
+            String nombres,
+            String apellidos,
+            String telefono,
+            String correoElectronico,
+            String direccion,
+            LocalDate fechaNacimiento,
+            String codigoEmpleado,
+            LocalDate fechaContratacion,
+            BigDecimal salario,
+            Cargo cargo,
+            Departamento departamento,
+            Pais pais
+    ) {
+        this(id, identidad, nombres, apellidos, telefono, correoElectronico, direccion, fechaNacimiento,
+                codigoEmpleado, fechaContratacion, salario, cargo, departamento, null, pais);
+    }
+
+    public Empleado(
+            Long id,
+            String identidad,
+            String nombres,
+            String apellidos,
+            String telefono,
+            String correoElectronico,
+            String direccion,
+            LocalDate fechaNacimiento,
+            String codigoEmpleado,
+            LocalDate fechaContratacion,
+            BigDecimal salario,
+            Cargo cargo,
+            Departamento departamento,
+            String rutaFotografia,
+            Pais pais
+    ) {
         super(id, identidad, nombres, apellidos, telefono, correoElectronico, direccion, fechaNacimiento);
         this.asignaciones = new ArrayList<>();
         this.codigoEmpleado = codigoEmpleado;
@@ -68,6 +110,7 @@ public class Empleado extends Persona {
         this.cargo = cargo;
         this.departamento = departamento;
         this.rutaFotografia = rutaFotografia;
+        this.pais = pais;
     }
 
     public String getCodigoEmpleado() {
@@ -108,6 +151,14 @@ public class Empleado extends Persona {
 
     public void setDepartamento(Departamento departamento) {
         this.departamento = departamento;
+    }
+
+    public Pais getPais() {
+        return pais;
+    }
+
+    public void setPais(Pais pais) {
+        this.pais = pais;
     }
 
     public String getRutaFotografia() {

@@ -69,6 +69,8 @@ public class EmpleadoController extends ControllerSupport {
         requireDate(empleado.getFechaContratacion(), "Fecha de contratacion");
         validateNonNegative(empleado.getSalario(), "Salario");
         validatePhotoPath(empleado.getRutaFotografia());
+        requireObject(empleado.getPais(), "Pais del empleado");
+        requireId(empleado.getPais().getId(), "Pais del empleado");
         requireObject(empleado.getCargo(), "Cargo del empleado");
         requireId(empleado.getCargo().getId(), "Cargo del empleado");
         requireObject(empleado.getDepartamento(), "Departamento del empleado");

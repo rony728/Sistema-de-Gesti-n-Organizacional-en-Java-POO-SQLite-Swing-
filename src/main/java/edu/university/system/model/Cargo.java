@@ -1,21 +1,32 @@
 package edu.university.system.model;
 
+import java.math.BigDecimal;
+
 /**
  * Catalogo de puestos o responsabilidades laborales asignables a empleados.
+ * Conserva una descripcion opcional y un salario base de referencia para el
+ * puesto sin reemplazar el salario individual del empleado.
  */
 public class Cargo {
 
     private Long id;
     private String nombre;
     private String descripcion;
+    private BigDecimal salarioBase;
 
     public Cargo() {
+        this.salarioBase = BigDecimal.ZERO;
     }
 
     public Cargo(Long id, String nombre, String descripcion) {
+        this(id, nombre, descripcion, BigDecimal.ZERO);
+    }
+
+    public Cargo(Long id, String nombre, String descripcion, BigDecimal salarioBase) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
+        this.salarioBase = salarioBase == null ? BigDecimal.ZERO : salarioBase;
     }
 
     public Long getId() {
@@ -40,6 +51,14 @@ public class Cargo {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    public BigDecimal getSalarioBase() {
+        return salarioBase;
+    }
+
+    public void setSalarioBase(BigDecimal salarioBase) {
+        this.salarioBase = salarioBase == null ? BigDecimal.ZERO : salarioBase;
     }
 
     @Override

@@ -43,10 +43,10 @@ Las vistas no ejecutan SQL. Los DAO no muestran ventanas. Los controladores no c
 
 - Pais
 - Departamento
-- Cargo
+- Cargo con salario base
 - Persona
-- Empleado
-- Empresa
+- Empleado con pais, departamento y cargo
+- Empresa con departamentos, empleados y proyectos
 - Proyecto
 - Asignacion
 - Rol
@@ -57,9 +57,11 @@ Las vistas no ejecutan SQL. Los DAO no muestran ventanas. Los controladores no c
 - Pais se conserva como catalogo independiente de ubicacion.
 - Una empresa pertenece a un pais.
 - Una empresa tiene departamentos organizacionales.
+- Una empresa agrupa empleados como coleccion POO, a traves de su estructura organizacional.
 - Un departamento organizacional pertenece a una empresa.
 - Un proyecto pertenece a una empresa.
-- Un empleado hereda datos de persona, tiene cargo y departamento.
+- Un empleado hereda datos de persona, tiene pais, cargo y departamento.
+- Un cargo tiene salario base de referencia.
 - Una asignacion relaciona empleado y proyecto.
 - Un usuario pertenece a un rol.
 
@@ -77,6 +79,9 @@ Incluye:
 - Datos iniciales.
 - Usuarios iniciales.
 - Migraciones idempotentes para compatibilidad con bases anteriores.
+- `empleado.pais_id` como relacion obligatoria con `pais`.
+- `cargo.salario_base` como referencia salarial del puesto.
+- Migraciones idempotentes para bases anteriores sin `pais_id` en `empleado` o `salario_base` en `cargo`.
 
 La ruta por defecto de la base es:
 
@@ -217,7 +222,7 @@ mvn clean test
 ```
 
 Cubren autenticacion, autorizacion, validaciones de controladores, DAO, integridad referencial, transacciones de empleado y exportacion PDF/Excel.
-Tambien verifican que Departamento sea una unidad organizacional asociada a Empresa y que la migracion desde bases antiguas con departamentos geograficos sea idempotente.
+Tambien verifican que Departamento sea una unidad organizacional asociada a Empresa, que Empleado conserve pais, cargo y departamento, que Cargo conserve salario base y que la migracion desde bases antiguas sea idempotente.
 
 ## Solucion de problemas
 

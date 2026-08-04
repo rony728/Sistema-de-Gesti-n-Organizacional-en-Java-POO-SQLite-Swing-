@@ -1,6 +1,7 @@
 package edu.university.system;
 
 import edu.university.system.controller.AsignacionController;
+import edu.university.system.controller.CargoController;
 import edu.university.system.controller.ControllerFactory;
 import edu.university.system.controller.DepartamentoController;
 import edu.university.system.controller.EmpleadoController;
@@ -86,6 +87,15 @@ class ControllerValidationTest {
 
         Empleado invalid = new Empleado(null, "1", "A", "B", null, "bad", "", null, "E", null, BigDecimal.ZERO, cargo, departamento);
         assertThrows(ValidationException.class, () -> controller.insertar(invalid));
+    }
+
+    @Test
+    void validatesCargo() {
+        CargoController controller = controllerFactory.cargoController();
+
+        assertThrows(ValidationException.class, () -> controller.insertar(new Cargo(null, "", "Desc", BigDecimal.ZERO)));
+        assertThrows(ValidationException.class, () -> controller.insertar(new Cargo(null, "Cargo negativo", "Desc", BigDecimal.valueOf(-1))));
+        assertDoesNotThrow(() -> controller.insertar(new Cargo(null, "Cargo prueba", "Desc", BigDecimal.ZERO)));
     }
 
     @Test

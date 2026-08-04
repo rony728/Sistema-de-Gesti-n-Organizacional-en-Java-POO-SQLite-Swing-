@@ -35,6 +35,7 @@ public final class CargoInternalFrame extends JInternalFrame {
     private final JTextField idField;
     private final JTextField nombreField;
     private final JTextField descripcionField;
+    private final JTextField salarioBaseField;
     private final JTextField searchField;
     private Long selectedCargoId;
 
@@ -46,6 +47,7 @@ public final class CargoInternalFrame extends JInternalFrame {
         this.idField = new JTextField(10);
         this.nombreField = new JTextField(26);
         this.descripcionField = new JTextField(36);
+        this.salarioBaseField = new JTextField(14);
         this.searchField = new JTextField(28);
         this.selectedCargoId = null;
 
@@ -65,7 +67,8 @@ public final class CargoInternalFrame extends JInternalFrame {
         ViewFeedback.configureTable(cargoTable);
         cargoTable.getColumnModel().getColumn(0).setPreferredWidth(70);
         cargoTable.getColumnModel().getColumn(1).setPreferredWidth(260);
-        cargoTable.getColumnModel().getColumn(2).setPreferredWidth(390);
+        cargoTable.getColumnModel().getColumn(2).setPreferredWidth(320);
+        cargoTable.getColumnModel().getColumn(3).setPreferredWidth(120);
 
         TableRowSorter<CargoTableModel> sorter = new TableRowSorter<>(tableModel);
         sorter.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
@@ -125,6 +128,17 @@ public final class CargoInternalFrame extends JInternalFrame {
 
         constraints.gridx = 0;
         constraints.gridy = 2;
+        constraints.gridwidth = 1;
+        constraints.weightx = 0;
+        formPanel.add(new JLabel("Salario base"), constraints);
+
+        constraints.gridx = 1;
+        constraints.gridwidth = 3;
+        constraints.weightx = 1;
+        formPanel.add(salarioBaseField, constraints);
+
+        constraints.gridx = 0;
+        constraints.gridy = 3;
         constraints.gridwidth = 1;
         constraints.weightx = 0;
         formPanel.add(new JLabel("Buscar"), constraints);
@@ -197,6 +211,7 @@ public final class CargoInternalFrame extends JInternalFrame {
         idField.setText(String.valueOf(cargo.getId()));
         nombreField.setText(cargo.getNombre());
         descripcionField.setText(cargo.getDescripcion());
+        salarioBaseField.setText(cargo.getSalarioBase() == null ? "0" : cargo.getSalarioBase().toPlainString());
     }
 
     private void saveCargo() {
@@ -204,7 +219,7 @@ public final class CargoInternalFrame extends JInternalFrame {
             if (!validateForm()) {
                 return;
             }
-            Cargo cargo = new Cargo(selectedCargoId, nombreField.getText(), descripcionField.getText());
+            Cargo cargo = new Cargo(selectedCargoId, nombreField.getText(), descripcionField.getText(), parseMoney(salarioBaseField.getText()));
             if (selectedCargoId == null) {
                 cargoController.insertar(cargo);
                 JOptionPane.showMessageDialog(this, "Cargo registrado correctamente.", "Registro exitoso", JOptionPane.INFORMATION_MESSAGE);
@@ -221,12 +236,20 @@ public final class CargoInternalFrame extends JInternalFrame {
     }
 
     private boolean validateForm() {
-        ViewFeedback.clearInvalid(nombreField);
+        ViewFeedback.clearInvalid(nombreField, salarioBaseField);
         boolean invalid = ViewFeedback.markBlank(nombreField, "Ingrese el nombre del cargo.");
+        invalid |= ViewFeedback.markInvalidDecimal(salarioBaseField, "Salario base");
         if (invalid) {
             ViewFeedback.showValidation(this, "Revise los campos resaltados antes de guardar.");
         }
         return !invalid;
+    }
+
+    private java.math.BigDecimal parseMoney(String value) {
+        if (value == null || value.isBlank()) {
+            return java.math.BigDecimal.ZERO;
+        }
+        return new java.math.BigDecimal(value.trim());
     }
 
     private void deleteCargo() {
@@ -261,7 +284,8 @@ public final class CargoInternalFrame extends JInternalFrame {
         idField.setText("");
         nombreField.setText("");
         descripcionField.setText("");
-        ViewFeedback.clearInvalid(nombreField);
+        salarioBaseField.setText("0");
+        ViewFeedback.clearInvalid(nombreField, salarioBaseField);
         cargoTable.clearSelection();
         nombreField.requestFocusInWindow();
     }

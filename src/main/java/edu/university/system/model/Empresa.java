@@ -20,10 +20,12 @@ public class Empresa {
     private String direccion;
     private Pais pais;
     private final List<Departamento> departamentos;
+    private final List<Empleado> empleados;
     private final List<Proyecto> proyectos;
 
     public Empresa() {
         this.departamentos = new ArrayList<>();
+        this.empleados = new ArrayList<>();
         this.proyectos = new ArrayList<>();
     }
 
@@ -124,6 +126,24 @@ public class Empresa {
         if (departamento.getEmpresa() == this) {
             departamento.setEmpresa(null);
         }
+    }
+
+    public List<Empleado> getEmpleados() {
+        return Collections.unmodifiableList(empleados);
+    }
+
+    public void agregarEmpleado(Empleado empleado) {
+        Objects.requireNonNull(empleado, "El empleado no puede ser nulo.");
+        if (!empleados.contains(empleado)) {
+            empleados.add(empleado);
+        }
+    }
+
+    public void removerEmpleado(Empleado empleado) {
+        if (empleado == null) {
+            return;
+        }
+        empleados.remove(empleado);
     }
 
     public List<Proyecto> getProyectos() {
