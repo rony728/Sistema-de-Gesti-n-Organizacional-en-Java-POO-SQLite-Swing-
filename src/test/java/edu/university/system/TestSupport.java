@@ -17,7 +17,7 @@ final class TestSupport {
 
     static DatabaseConnection database(Path databasePath) {
         Properties properties = new Properties();
-        properties.setProperty("app.name", "Sistema Universitario Test");
+        properties.setProperty("app.name", "Sistema de Gestión Organizacional Test");
         properties.setProperty("app.version", "1.0.0-test");
         properties.setProperty("app.company", "Pruebas");
         properties.setProperty("database.path", databasePath.toString());

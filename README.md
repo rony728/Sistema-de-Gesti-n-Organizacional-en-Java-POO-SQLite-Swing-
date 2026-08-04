@@ -1,4 +1,4 @@
-# Sistema Universitario
+# Sistema de Gestión Organizacional
 
 Sistema de escritorio desarrollado como proyecto final universitario. La aplicacion permite administrar catalogos, empleados, empresas, proyectos, asignaciones, usuarios, autenticacion, permisos, fotografias y exportaciones.
 
@@ -164,7 +164,7 @@ src/main/resources/application.properties
 Propiedades principales:
 
 ```properties
-app.name=Sistema Universitario
+app.name=Sistema de Gestión Organizacional
 app.version=1.0.0
 app.company=Proyecto Final Universitario
 database.path=data/sistema_universitario.db
