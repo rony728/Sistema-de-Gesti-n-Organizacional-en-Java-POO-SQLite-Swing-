@@ -261,4 +261,4 @@ Fotografia no visible:
 
 ## Autor
 
-Nombre del estudiante: ______________________________
+Rony Turcios, programador independiente.
