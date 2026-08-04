@@ -494,6 +494,7 @@ public final class MainWindow extends JFrame {
                 new EmpleadoInternalFrame(
                         controllerFactory.empleadoController(),
                         controllerFactory.cargoController(),
+                        controllerFactory.paisController(),
                         controllerFactory.departamentoController(),
                         controllerFactory.empresaController()
                 );

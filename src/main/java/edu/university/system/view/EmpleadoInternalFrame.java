@@ -4,6 +4,7 @@ import edu.university.system.controller.CargoController;
 import edu.university.system.controller.DepartamentoController;
 import edu.university.system.controller.EmpleadoController;
 import edu.university.system.controller.EmpresaController;
+import edu.university.system.controller.PaisController;
 import edu.university.system.controller.AuthorizationService;
 import edu.university.system.controller.Permission;
 import edu.university.system.controller.ValidationException;
@@ -11,6 +12,7 @@ import edu.university.system.model.Cargo;
 import edu.university.system.model.Departamento;
 import edu.university.system.model.Empleado;
 import edu.university.system.model.Empresa;
+import edu.university.system.model.Pais;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -46,6 +48,7 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
 
     private final EmpleadoController empleadoController;
     private final CargoController cargoController;
+    private final PaisController paisController;
     private final DepartamentoController departamentoController;
     private final EmpresaController empresaController;
     private final EmpleadoTableModel tableModel;
@@ -65,6 +68,7 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
     private final JTextField searchField;
     private final JLabel fotografiaPreviewLabel;
     private final JComboBox<Cargo> cargoComboBox;
+    private final JComboBox<Pais> paisComboBox;
     private final JComboBox<Empresa> empresaComboBox;
     private final JComboBox<Departamento> departamentoComboBox;
     private Long selectedEmpleadoId;
@@ -72,12 +76,14 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
     public EmpleadoInternalFrame(
             EmpleadoController empleadoController,
             CargoController cargoController,
+            PaisController paisController,
             DepartamentoController departamentoController,
             EmpresaController empresaController
     ) {
         super("Modulo Empleados", true, true, true, true);
         this.empleadoController = empleadoController;
         this.cargoController = cargoController;
+        this.paisController = paisController;
         this.departamentoController = departamentoController;
         this.empresaController = empresaController;
         this.tableModel = new EmpleadoTableModel();
@@ -97,6 +103,7 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
         this.searchField = new JTextField(28);
         this.fotografiaPreviewLabel = new JLabel("Sin fotografia", SwingConstants.CENTER);
         this.cargoComboBox = new JComboBox<>();
+        this.paisComboBox = new JComboBox<>();
         this.empresaComboBox = new JComboBox<>();
         this.departamentoComboBox = new JComboBox<>();
         this.selectedEmpleadoId = null;
@@ -161,8 +168,9 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
         addField(formPanel, c, 2, 4, "Contratacion", fechaContratacionField);
         addField(formPanel, c, 4, 4, "Salario", salarioField);
         addCombo(formPanel, c, 0, 5, "Cargo", cargoComboBox);
-        addCombo(formPanel, c, 3, 5, "Empresa", empresaComboBox);
-        addCombo(formPanel, c, 0, 6, "Departamento", departamentoComboBox);
+        addCombo(formPanel, c, 3, 5, "Pais", paisComboBox);
+        addCombo(formPanel, c, 0, 6, "Empresa", empresaComboBox);
+        addCombo(formPanel, c, 3, 6, "Departamento", departamentoComboBox);
         addPhotoField(formPanel, c);
         addSearchField(formPanel, c);
 
@@ -289,6 +297,10 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
 
     private void loadCatalogs() {
         try {
+            paisComboBox.removeAllItems();
+            for (Pais pais : paisController.listar()) {
+                paisComboBox.addItem(pais);
+            }
             cargoComboBox.removeAllItems();
             for (Cargo cargo : cargoController.listar()) {
                 cargoComboBox.addItem(cargo);
@@ -362,6 +374,7 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
         fotografiaField.setText(empleado.getRutaFotografia());
         updatePhotoPreview(empleado.getRutaFotografia());
         selectCargo(empleado.getCargo());
+        selectPais(empleado.getPais());
         selectEmpresa(empleado.getDepartamento() == null ? null : empleado.getDepartamento().getEmpresa());
         selectDepartamento(empleado.getDepartamento());
     }
@@ -398,6 +411,7 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
                 fechaContratacionField,
                 salarioField,
                 cargoComboBox,
+                paisComboBox,
                 empresaComboBox,
                 departamentoComboBox
         );
@@ -410,6 +424,7 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
         invalid |= ViewFeedback.markInvalidRequiredDate(fechaContratacionField, "Fecha de contratacion");
         invalid |= ViewFeedback.markInvalidDecimal(salarioField, "Salario");
         invalid |= ViewFeedback.markEmptyCombo(cargoComboBox, "Seleccione un cargo.");
+        invalid |= ViewFeedback.markEmptyCombo(paisComboBox, "Seleccione un pais.");
         invalid |= ViewFeedback.markEmptyCombo(empresaComboBox, "Seleccione una empresa.");
         invalid |= ViewFeedback.markEmptyCombo(departamentoComboBox, "Seleccione un departamento.");
         if (correoField.getText() != null && !correoField.getText().isBlank() && !correoField.getText().contains("@")) {
@@ -437,7 +452,8 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
                 parseMoney(salarioField.getText(), "Salario"),
                 (Cargo) cargoComboBox.getSelectedItem(),
                 (Departamento) departamentoComboBox.getSelectedItem(),
-                fotografiaField.getText()
+                fotografiaField.getText(),
+                (Pais) paisComboBox.getSelectedItem()
         );
     }
 
@@ -521,11 +537,15 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
                 fechaContratacionField,
                 salarioField,
                 cargoComboBox,
+                paisComboBox,
                 empresaComboBox,
                 departamentoComboBox
         );
         if (cargoComboBox.getItemCount() > 0) {
             cargoComboBox.setSelectedIndex(0);
+        }
+        if (paisComboBox.getItemCount() > 0) {
+            paisComboBox.setSelectedIndex(0);
         }
         if (empresaComboBox.getItemCount() > 0) {
             empresaComboBox.setSelectedIndex(0);
@@ -595,6 +615,19 @@ public final class EmpleadoInternalFrame extends JInternalFrame {
             Cargo item = cargoComboBox.getItemAt(index);
             if (cargo.getId().equals(item.getId())) {
                 cargoComboBox.setSelectedIndex(index);
+                return;
+            }
+        }
+    }
+
+    private void selectPais(Pais pais) {
+        if (pais == null || pais.getId() == null) {
+            return;
+        }
+        for (int index = 0; index < paisComboBox.getItemCount(); index++) {
+            Pais item = paisComboBox.getItemAt(index);
+            if (pais.getId().equals(item.getId())) {
+                paisComboBox.setSelectedIndex(index);
                 return;
             }
         }

@@ -4,6 +4,7 @@ import edu.university.system.config.DatabaseConnection;
 import edu.university.system.model.Cargo;
 import edu.university.system.model.Departamento;
 import edu.university.system.model.Empleado;
+import edu.university.system.model.Pais;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -35,9 +36,11 @@ public class EmpleadoDao extends DaoSupport implements CrudDao<Empleado, Long> {
                 e.fecha_contratacion,
                 e.salario,
                 e.foto_ruta,
+                e.pais_id AS empleado_pais_id,
                 c.id AS cargo_id,
                 c.nombre AS cargo_nombre,
                 c.descripcion AS cargo_descripcion,
+                c.salario_base AS cargo_salario_base,
                 d.id AS departamento_id,
                 d.nombre AS departamento_nombre,
                 d.presupuesto AS departamento_presupuesto,
@@ -50,21 +53,25 @@ public class EmpleadoDao extends DaoSupport implements CrudDao<Empleado, Long> {
                 emp.direccion AS empresa_direccion,
                 pa.id AS pais_id,
                 pa.nombre AS pais_nombre,
-                pa.codigo_iso AS pais_codigo_iso
+                pa.codigo_iso AS pais_codigo_iso,
+                ep.id AS empleado_pais_id_ref,
+                ep.nombre AS empleado_pais_nombre,
+                ep.codigo_iso AS empleado_pais_codigo_iso
             FROM empleado e
             INNER JOIN persona p ON p.id = e.id
             INNER JOIN cargo c ON c.id = e.cargo_id
             INNER JOIN departamento d ON d.id = e.departamento_id
             INNER JOIN empresa emp ON emp.id = d.empresa_id
             INNER JOIN pais pa ON pa.id = emp.pais_id
+            INNER JOIN pais ep ON ep.id = e.pais_id
             """;
     private static final String INSERT_EMPLEADO_SQL = """
-            INSERT INTO empleado (id, cargo_id, departamento_id, codigo_empleado, fecha_contratacion, salario, foto_ruta)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO empleado (id, cargo_id, departamento_id, pais_id, codigo_empleado, fecha_contratacion, salario, foto_ruta)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """;
     private static final String UPDATE_EMPLEADO_SQL = """
             UPDATE empleado
-            SET cargo_id = ?, departamento_id = ?, codigo_empleado = ?, fecha_contratacion = ?,
+            SET cargo_id = ?, departamento_id = ?, pais_id = ?, codigo_empleado = ?, fecha_contratacion = ?,
                 salario = ?, foto_ruta = ?, fecha_actualizacion = datetime('now')
             WHERE id = ?
             """;
@@ -78,6 +85,7 @@ public class EmpleadoDao extends DaoSupport implements CrudDao<Empleado, Long> {
                 OR lower(p.apellidos) LIKE lower(?)
                 OR lower(c.nombre) LIKE lower(?)
                 OR lower(d.nombre) LIKE lower(?)
+                OR lower(ep.nombre) LIKE lower(?)
              ORDER BY p.apellidos, p.nombres
             """;
 
@@ -102,10 +110,11 @@ public class EmpleadoDao extends DaoSupport implements CrudDao<Empleado, Long> {
                 empleadoStatement.setLong(1, personaId);
                 empleadoStatement.setLong(2, requireId(empleado.getCargo().getId(), "cargo"));
                 empleadoStatement.setLong(3, requireId(empleado.getDepartamento().getId(), "departamento"));
-                empleadoStatement.setString(4, empleado.getCodigoEmpleado());
-                setRequiredDate(empleadoStatement, 5, empleado.getFechaContratacion());
-                setBigDecimalOrZero(empleadoStatement, 6, empleado.getSalario());
-                setStringOrNull(empleadoStatement, 7, empleado.getRutaFotografia());
+                empleadoStatement.setLong(4, requireId(empleado.getPais().getId(), "pais"));
+                empleadoStatement.setString(5, empleado.getCodigoEmpleado());
+                setRequiredDate(empleadoStatement, 6, empleado.getFechaContratacion());
+                setBigDecimalOrZero(empleadoStatement, 7, empleado.getSalario());
+                setStringOrNull(empleadoStatement, 8, empleado.getRutaFotografia());
                 empleadoStatement.executeUpdate();
 
                 connection.commit();
@@ -134,11 +143,12 @@ public class EmpleadoDao extends DaoSupport implements CrudDao<Empleado, Long> {
 
                 empleadoStatement.setLong(1, requireId(empleado.getCargo().getId(), "cargo"));
                 empleadoStatement.setLong(2, requireId(empleado.getDepartamento().getId(), "departamento"));
-                empleadoStatement.setString(3, empleado.getCodigoEmpleado());
-                setRequiredDate(empleadoStatement, 4, empleado.getFechaContratacion());
-                setBigDecimalOrZero(empleadoStatement, 5, empleado.getSalario());
-                setStringOrNull(empleadoStatement, 6, empleado.getRutaFotografia());
-                empleadoStatement.setLong(7, requireId(empleado.getId(), "empleado"));
+                empleadoStatement.setLong(3, requireId(empleado.getPais().getId(), "pais"));
+                empleadoStatement.setString(4, empleado.getCodigoEmpleado());
+                setRequiredDate(empleadoStatement, 5, empleado.getFechaContratacion());
+                setBigDecimalOrZero(empleadoStatement, 6, empleado.getSalario());
+                setStringOrNull(empleadoStatement, 7, empleado.getRutaFotografia());
+                empleadoStatement.setLong(8, requireId(empleado.getId(), "empleado"));
                 int empleadoRows = empleadoStatement.executeUpdate();
 
                 connection.commit();
@@ -198,7 +208,7 @@ public class EmpleadoDao extends DaoSupport implements CrudDao<Empleado, Long> {
         String searchPattern = "%" + (criterio == null ? "" : criterio.trim()) + "%";
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(SEARCH_SQL)) {
-            for (int index = 1; index <= 6; index++) {
+            for (int index = 1; index <= 7; index++) {
                 statement.setString(index, searchPattern);
             }
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -212,13 +222,39 @@ public class EmpleadoDao extends DaoSupport implements CrudDao<Empleado, Long> {
         }
     }
 
+    public List<Empleado> listarPorEmpresa(Long empresaId) {
+        List<Empleado> empleados = new ArrayList<>();
+        String sql = BASE_SELECT + """
+                 WHERE emp.id = ?
+                 ORDER BY p.apellidos, p.nombres
+                """;
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, requireId(empresaId, "empresa"));
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    empleados.add(mapEmpleado(resultSet));
+                }
+            }
+            return empleados;
+        } catch (SQLException exception) {
+            throw new DaoException("No se pudieron listar los empleados por empresa.", exception);
+        }
+    }
+
     static Empleado mapEmpleado(ResultSet resultSet) throws SQLException {
         Cargo cargo = new Cargo(
                 resultSet.getLong("cargo_id"),
                 resultSet.getString("cargo_nombre"),
-                resultSet.getString("cargo_descripcion")
+                resultSet.getString("cargo_descripcion"),
+                resultSet.getBigDecimal("cargo_salario_base")
         );
         Departamento departamento = DepartamentoDao.mapDepartamento(resultSet);
+        Pais pais = new Pais(
+                resultSet.getLong("empleado_pais_id_ref"),
+                resultSet.getString("empleado_pais_nombre"),
+                resultSet.getString("empleado_pais_codigo_iso")
+        );
 
         return new Empleado(
                 resultSet.getLong("persona_id"),
@@ -234,7 +270,8 @@ public class EmpleadoDao extends DaoSupport implements CrudDao<Empleado, Long> {
                 resultSet.getBigDecimal("salario"),
                 cargo,
                 departamento,
-                resultSet.getString("foto_ruta")
+                resultSet.getString("foto_ruta"),
+                pais
         );
     }
 }

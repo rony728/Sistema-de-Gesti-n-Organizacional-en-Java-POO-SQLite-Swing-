@@ -42,6 +42,8 @@ public final class DatabaseConnection {
             Class.forName("org.sqlite.JDBC");
             try (Connection connection = getConnection()) {
                 migrateLegacyOrganizationalDepartmentModel(connection);
+                migrateLegacyCargoSalaryBase(connection);
+                migrateLegacyEmpleadoPais(connection);
                 applySchema(connection);
             }
         } catch (IOException exception) {
@@ -118,6 +120,88 @@ public final class DatabaseConnection {
             } finally {
                 statement.execute("PRAGMA foreign_keys = ON");
             }
+        }
+    }
+
+    private void migrateLegacyCargoSalaryBase(Connection connection) throws SQLException {
+        if (!tableExists(connection, "cargo") || columnExists(connection, "cargo", "salario_base")) {
+            return;
+        }
+
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("""
+                    ALTER TABLE cargo
+                    ADD COLUMN salario_base NUMERIC NOT NULL DEFAULT 0 CHECK (salario_base >= 0)
+                    """);
+        }
+    }
+
+    private void migrateLegacyEmpleadoPais(Connection connection) throws SQLException {
+        if (!tableExists(connection, "empleado") || columnExists(connection, "empleado", "pais_id")) {
+            return;
+        }
+
+        Long defaultPaisId = resolveLegacyPaisId(connection);
+        if (defaultPaisId == null) {
+            throw new IllegalStateException("No se encontro un pais de referencia para migrar empleados.");
+        }
+
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("PRAGMA foreign_keys = OFF");
+            statement.execute("BEGIN TRANSACTION");
+            try {
+                statement.execute("""
+                        CREATE TABLE IF NOT EXISTS empleado_migracion (
+                            id INTEGER PRIMARY KEY,
+                            cargo_id INTEGER NOT NULL,
+                            departamento_id INTEGER NOT NULL,
+                            pais_id INTEGER NOT NULL,
+                            codigo_empleado TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                            fecha_contratacion TEXT NOT NULL,
+                            salario NUMERIC NOT NULL DEFAULT 0 CHECK (salario >= 0),
+                            foto_ruta TEXT,
+                            fecha_creacion TEXT NOT NULL DEFAULT (datetime('now')),
+                            fecha_actualizacion TEXT,
+                            FOREIGN KEY (id) REFERENCES persona (id) ON UPDATE CASCADE ON DELETE CASCADE,
+                            FOREIGN KEY (cargo_id) REFERENCES cargo (id) ON UPDATE CASCADE ON DELETE RESTRICT,
+                            FOREIGN KEY (departamento_id) REFERENCES departamento (id) ON UPDATE CASCADE ON DELETE RESTRICT,
+                            FOREIGN KEY (pais_id) REFERENCES pais (id) ON UPDATE CASCADE ON DELETE RESTRICT
+                        )
+                        """);
+                statement.execute("""
+                        INSERT INTO empleado_migracion (
+                            id, cargo_id, departamento_id, pais_id, codigo_empleado, fecha_contratacion,
+                            salario, foto_ruta, fecha_creacion, fecha_actualizacion
+                        )
+                        SELECT id, cargo_id, departamento_id, %d, codigo_empleado, fecha_contratacion,
+                               salario, foto_ruta, fecha_creacion, fecha_actualizacion
+                        FROM empleado
+                        """.formatted(defaultPaisId));
+                statement.execute("DROP TABLE empleado");
+                statement.execute("ALTER TABLE empleado_migracion RENAME TO empleado");
+                statement.execute("CREATE INDEX IF NOT EXISTS idx_empleado_pais_id ON empleado (pais_id)");
+                statement.execute("COMMIT");
+            } catch (SQLException exception) {
+                statement.execute("ROLLBACK");
+                throw exception;
+            } finally {
+                statement.execute("PRAGMA foreign_keys = ON");
+            }
+        }
+    }
+
+    private Long resolveLegacyPaisId(Connection connection) throws SQLException {
+        if (!tableExists(connection, "pais")) {
+            return null;
+        }
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery("""
+                     SELECT id
+                     FROM pais
+                     ORDER BY id ASC
+                     LIMIT 1
+                     """)) {
+            return resultSet.next() ? resultSet.getLong(1) : null;
         }
     }
 

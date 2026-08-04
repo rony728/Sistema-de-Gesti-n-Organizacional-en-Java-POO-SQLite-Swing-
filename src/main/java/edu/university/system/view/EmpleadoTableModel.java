@@ -8,7 +8,7 @@ import java.util.List;
 
 final class EmpleadoTableModel extends AbstractTableModel {
 
-    private static final String[] COLUMN_NAMES = {"ID", "Codigo", "Identidad", "Nombre", "Cargo", "Departamento", "Contratacion", "Salario"};
+    private static final String[] COLUMN_NAMES = {"ID", "Codigo", "Identidad", "Nombre", "Cargo", "Departamento", "Pais", "Contratacion", "Salario"};
     private final List<Empleado> empleados;
 
     EmpleadoTableModel() {
@@ -46,7 +46,7 @@ final class EmpleadoTableModel extends AbstractTableModel {
     public Class<?> getColumnClass(int columnIndex) {
         return switch (columnIndex) {
             case 0 -> Long.class;
-            case 7 -> java.math.BigDecimal.class;
+            case 8 -> java.math.BigDecimal.class;
             default -> String.class;
         };
     }
@@ -66,8 +66,9 @@ final class EmpleadoTableModel extends AbstractTableModel {
             case 3 -> empleado.getNombreCompleto();
             case 4 -> empleado.getCargo() == null ? "" : empleado.getCargo().getNombre();
             case 5 -> empleado.getDepartamento() == null ? "" : empleado.getDepartamento().getNombre();
-            case 6 -> empleado.getFechaContratacion();
-            case 7 -> empleado.getSalario();
+            case 6 -> empleado.getPais() == null ? "" : empleado.getPais().getNombre();
+            case 7 -> empleado.getFechaContratacion();
+            case 8 -> empleado.getSalario();
             default -> "";
         };
     }

@@ -3,12 +3,13 @@ package edu.university.system.view;
 import edu.university.system.model.Cargo;
 
 import javax.swing.table.AbstractTableModel;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 final class CargoTableModel extends AbstractTableModel {
 
-    private static final String[] COLUMN_NAMES = {"ID", "Nombre", "Descripcion"};
+    private static final String[] COLUMN_NAMES = {"ID", "Nombre", "Descripcion", "Salario base"};
     private final List<Cargo> cargos;
 
     CargoTableModel() {
@@ -44,7 +45,11 @@ final class CargoTableModel extends AbstractTableModel {
 
     @Override
     public Class<?> getColumnClass(int columnIndex) {
-        return columnIndex == 0 ? Long.class : String.class;
+        return switch (columnIndex) {
+            case 0 -> Long.class;
+            case 3 -> BigDecimal.class;
+            default -> String.class;
+        };
     }
 
     @Override
@@ -59,6 +64,7 @@ final class CargoTableModel extends AbstractTableModel {
             case 0 -> cargo.getId();
             case 1 -> cargo.getNombre();
             case 2 -> cargo.getDescripcion();
+            case 3 -> cargo.getSalarioBase();
             default -> "";
         };
     }

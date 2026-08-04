@@ -3,6 +3,7 @@ package edu.university.system.dao;
 import edu.university.system.config.DatabaseConnection;
 import edu.university.system.model.Cargo;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,30 +16,31 @@ import java.util.Optional;
 public class CargoDao extends DaoSupport implements CrudDao<Cargo, Long> {
 
     private static final String INSERT_SQL = """
-            INSERT INTO cargo (nombre, descripcion)
-            VALUES (?, ?)
+            INSERT INTO cargo (nombre, descripcion, salario_base)
+            VALUES (?, ?, ?)
             """;
     private static final String UPDATE_SQL = """
             UPDATE cargo
-            SET nombre = ?, descripcion = ?, fecha_actualizacion = datetime('now')
+            SET nombre = ?, descripcion = ?, salario_base = ?, fecha_actualizacion = datetime('now')
             WHERE id = ?
             """;
     private static final String DELETE_SQL = "DELETE FROM cargo WHERE id = ?";
     private static final String FIND_BY_ID_SQL = """
-            SELECT id, nombre, descripcion
+            SELECT id, nombre, descripcion, salario_base
             FROM cargo
             WHERE id = ?
             """;
     private static final String FIND_ALL_SQL = """
-            SELECT id, nombre, descripcion
+            SELECT id, nombre, descripcion, salario_base
             FROM cargo
             ORDER BY nombre
             """;
     private static final String SEARCH_SQL = """
-            SELECT id, nombre, descripcion
+            SELECT id, nombre, descripcion, salario_base
             FROM cargo
             WHERE lower(nombre) LIKE lower(?)
                OR lower(coalesce(descripcion, '')) LIKE lower(?)
+               OR lower(coalesce(CAST(salario_base AS TEXT), '')) LIKE lower(?)
             ORDER BY nombre
             """;
 
@@ -52,6 +54,7 @@ public class CargoDao extends DaoSupport implements CrudDao<Cargo, Long> {
              PreparedStatement statement = connection.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, cargo.getNombre());
             setStringOrNull(statement, 2, cargo.getDescripcion());
+            statement.setBigDecimal(3, cargo.getSalarioBase() == null ? BigDecimal.ZERO : cargo.getSalarioBase());
             statement.executeUpdate();
             long id = getGeneratedId(statement);
             cargo.setId(id);
@@ -67,7 +70,8 @@ public class CargoDao extends DaoSupport implements CrudDao<Cargo, Long> {
              PreparedStatement statement = connection.prepareStatement(UPDATE_SQL)) {
             statement.setString(1, cargo.getNombre());
             setStringOrNull(statement, 2, cargo.getDescripcion());
-            statement.setLong(3, requireId(cargo.getId(), "cargo"));
+            statement.setBigDecimal(3, cargo.getSalarioBase() == null ? BigDecimal.ZERO : cargo.getSalarioBase());
+            statement.setLong(4, requireId(cargo.getId(), "cargo"));
             return statement.executeUpdate() > 0;
         } catch (SQLException exception) {
             throw new DaoException("No se pudo actualizar el cargo.", exception);
@@ -135,7 +139,8 @@ public class CargoDao extends DaoSupport implements CrudDao<Cargo, Long> {
         return new Cargo(
                 resultSet.getLong("id"),
                 resultSet.getString("nombre"),
-                resultSet.getString("descripcion")
+                resultSet.getString("descripcion"),
+                resultSet.getBigDecimal("salario_base")
         );
     }
 }

@@ -80,6 +80,7 @@ CREATE TABLE IF NOT EXISTS cargo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL UNIQUE COLLATE NOCASE,
     descripcion TEXT,
+    salario_base NUMERIC NOT NULL DEFAULT 0 CHECK (salario_base >= 0),
     activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
     fecha_creacion TEXT NOT NULL DEFAULT (datetime('now')),
     fecha_actualizacion TEXT,
@@ -115,6 +116,7 @@ CREATE TABLE IF NOT EXISTS empleado (
     id INTEGER PRIMARY KEY,
     cargo_id INTEGER NOT NULL,
     departamento_id INTEGER NOT NULL,
+    pais_id INTEGER NOT NULL,
     codigo_empleado TEXT NOT NULL UNIQUE COLLATE NOCASE,
     fecha_contratacion TEXT NOT NULL,
     salario NUMERIC NOT NULL DEFAULT 0 CHECK (salario >= 0),
@@ -134,6 +136,11 @@ CREATE TABLE IF NOT EXISTS empleado (
     CONSTRAINT fk_empleado_departamento
         FOREIGN KEY (departamento_id)
         REFERENCES departamento (id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_empleado_pais
+        FOREIGN KEY (pais_id)
+        REFERENCES pais (id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     CONSTRAINT ck_empleado_codigo
@@ -243,6 +250,9 @@ CREATE INDEX IF NOT EXISTS idx_empleado_cargo_id
 CREATE INDEX IF NOT EXISTS idx_empleado_departamento_id
     ON empleado (departamento_id);
 
+CREATE INDEX IF NOT EXISTS idx_empleado_pais_id
+    ON empleado (pais_id);
+
 CREATE INDEX IF NOT EXISTS idx_empresa_pais_id
     ON empresa (pais_id);
 
@@ -324,13 +334,13 @@ VALUES
     (3, 1, 'Tecnologia', 0, 1),
     (4, 1, 'Administracion', 0, 1),
     (5, 1, 'Ventas', 0, 1);
-INSERT OR IGNORE INTO cargo (id, nombre, descripcion)
+INSERT OR IGNORE INTO cargo (id, nombre, descripcion, salario_base)
 VALUES
-    (1, 'Administrador de Sistemas', 'Responsable de administrar configuraciones y seguridad del sistema.'),
-    (2, 'Gerente de Proyecto', 'Responsable de planificar y supervisar proyectos.'),
-    (3, 'Analista', 'Responsable de analizar informacion operativa y tecnica.'),
-    (4, 'Desarrollador', 'Responsable de construir y mantener soluciones de software.'),
-    (5, 'Consultor', 'Responsable de apoyar procesos de negocio y seguimiento.');
+    (1, 'Administrador de Sistemas', 'Responsable de administrar configuraciones y seguridad del sistema.', 18000),
+    (2, 'Gerente de Proyecto', 'Responsable de planificar y supervisar proyectos.', 25000),
+    (3, 'Analista', 'Responsable de analizar informacion operativa y tecnica.', 15000),
+    (4, 'Desarrollador', 'Responsable de construir y mantener soluciones de software.', 20000),
+    (5, 'Consultor', 'Responsable de apoyar procesos de negocio y seguimiento.', 17000);
 
 COMMIT;
 
